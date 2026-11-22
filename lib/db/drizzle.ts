@@ -142,14 +142,7 @@ function withDbSpan<T>(
 	return withSpan(
 		"db.query",
 		dbQueryAttributes(operation, collection, method),
-		async (span) => {
-			if (await shouldInjectDbLatencySpike(operation, collection)) {
-				span?.setAttribute("app.result", "latency_spike");
-				await sleep(5000);
-			}
-
-			return fn();
-		},
+		fn,
 	);
 }
 
@@ -189,30 +182,6 @@ function dbBatchAttributes(sqlStatements: (string | undefined)[]) {
 		"db.statement_count": sqlStatements.length,
 		...(collections.length === 1 ? { "db.collection": collections[0] } : {}),
 	};
-}
-
-async function shouldInjectDbLatencySpike(
-	operation: string,
-	collection: string | undefined,
-) {
-	return (
-		operation === "select" &&
-		collection === "team_members" &&
-		(await isRequestFaultActive("api-team-db-latency-spike"))
-	);
-}
-
-async function isRequestFaultActive(faultName: string) {
-	try {
-		const { headers } = await import("next/headers");
-		return (await headers()).get("x-faults")?.trim() === faultName;
-	} catch {
-		return false;
-	}
-}
-
-function sleep(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function sqlFromStatement(statement: unknown): string | undefined {

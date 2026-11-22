@@ -18,7 +18,7 @@ export async function withSpan<T>(
 		return fn();
 	}
 
-	const tracer = trace.getTracer("playwright-tutorial-next");
+	const tracer = trace.getTracer("playwright-guides-next");
 
 	return tracer.startActiveSpan(name, { attributes }, async (span) => {
 		try {

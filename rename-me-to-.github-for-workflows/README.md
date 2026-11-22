@@ -1,1 +1,0 @@
-These files need to be copied to .github/workflows to take effect

@@ -5,9 +5,9 @@ import { SWRConfig } from "swr";
 import { getTeamForUser, getUser } from "@/lib/db/queries";
 
 export const metadata: Metadata = {
-	title: "Playwright Tutorial",
+	title: "ACME",
 	description:
-		"Learn how to end-to-end test web applications with Playwright and Endform.",
+		"A demo SaaS application used throughout Endform's Playwright guides.",
 };
 
 export const viewport: Viewport = {

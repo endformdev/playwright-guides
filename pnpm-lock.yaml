@@ -251,9 +251,6 @@ importers:
       '@playwright/test':
         specifier: 1.65.0
         version: 1.65.0
-      '@types/bun':
-        specifier: ^1.4.4
-        version: 1.4.4
       endform:
         specifier: ^0.82.2
         version: 0.82.2
@@ -263,9 +260,6 @@ importers:
       oxlint:
         specifier: 1.93.0
         version: 1.93.0
-      playwright-opentelemetry:
-        specifier: ^0.15.0
-        version: 0.15.0(@playwright/test@1.65.0)
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
@@ -2017,9 +2011,6 @@ packages:
   '@tailwindcss/postcss@4.3.5':
     resolution: {integrity: sha512-FAV37Tlx9wBiT/hkfgVD0Q6CWsP2oUX3lf28nrfjW8+ksILjnpuFulUqWDfNR4/ZiEHHDRBX8DUTzD1Rys687A==}
 
-  '@types/bun@1.4.4':
-    resolution: {integrity: sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ==}
-
   '@types/node@26.6.6':
     resolution: {integrity: sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog==}
 
@@ -2165,10 +2156,6 @@ packages:
       '@opentelemetry/sdk-logs': '>=0.200.0 <0.300.0'
       '@opentelemetry/sdk-metrics': '>=2.0.0 <3.0.0'
       '@opentelemetry/sdk-trace-base': '>=2.0.0 <3.0.0'
-
-  '@zip.js/zip.js@2.24.0':
-    resolution: {integrity: sha512-WlaVKzdqBK+RF3bdiXZWbdCnvGB6PdO4IHC1mn/2Yfl3bASgqUNegnU3+PNg61iecwoPfUi5BgLUPqBukXpyWw==}
-    engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
 
   aria-hidden@1.2.6:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
@@ -2575,11 +2562,6 @@ packages:
     resolution: {integrity: sha512-vNSKgH6YqtN7cdT/L334zo0a+YwkrpicyrHJlWWPIm/Q+Nn2SWInil01oT0mbu96U4GgoRtCYQD9CzJQgju+lA==}
     engines: {node: '>=20'}
     hasBin: true
-
-  playwright-opentelemetry@0.15.0:
-    resolution: {integrity: sha512-fzf7X+ZkT8lqufJP6h3MQ6PgxfPyWY25Ge0gl9SmJgTBaxk79cqaMZqBWaeCa+l3j7ui6vGZEjx4L9jOdqHRzA==}
-    peerDependencies:
-      '@playwright/test': '*'
 
   playwright@1.65.0:
     resolution: {integrity: sha512-F3AMWcR44qMBt4kq+6Kb6mX7bjGXshktKFOPULd7reED6ZJWevjbNRqysP7q+AATE9kdPEZBibex1BYsvpVoeA==}
@@ -4200,10 +4182,6 @@ snapshots:
       postcss: 8.5.32
       tailwindcss: 4.3.5
 
-  '@types/bun@1.4.4':
-    dependencies:
-      bun-types: 1.4.4
-
   '@types/node@26.6.6':
     dependencies:
       undici-types: 8.9.0
@@ -4290,8 +4268,6 @@ snapshots:
       '@opentelemetry/sdk-metrics': 2.12.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base': 2.12.0(@opentelemetry/api@1.9.1)
 
-  '@zip.js/zip.js@2.24.0': {}
-
   aria-hidden@1.2.6:
     dependencies:
       tslib: 2.9.1
@@ -4306,6 +4282,7 @@ snapshots:
     dependencies:
       '@types/node': 26.6.6
       undici-types: 8.12.4
+    optional: true
 
   caniuse-lite@1.0.30001823: {}
 
@@ -4620,11 +4597,6 @@ snapshots:
 
   playwright-core@1.65.0: {}
 
-  playwright-opentelemetry@0.15.0(@playwright/test@1.65.0):
-    dependencies:
-      '@playwright/test': 1.65.0
-      '@zip.js/zip.js': 2.24.0
-
   playwright@1.65.0:
     dependencies:
       playwright-core: 1.65.0
@@ -4851,7 +4823,8 @@ snapshots:
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
 
-  undici-types@8.12.4: {}
+  undici-types@8.12.4:
+    optional: true
 
   undici-types@8.9.0: {}
 

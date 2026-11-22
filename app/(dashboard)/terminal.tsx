@@ -4,7 +4,7 @@ import { Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const terminalSteps = [
-	"git clone https://github.com/endformdev/playwright-tutorial",
+	"git clone https://github.com/endformdev/playwright-guides",
 	"pnpm install",
 	"pnpm dev",
 	"pnpm db:setup   # optional: switch to local SQLite",

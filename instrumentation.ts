@@ -10,9 +10,9 @@ export function register() {
 	}
 
 	registerOTel({
-		serviceName: process.env.OTEL_SERVICE_NAME || "playwright-tutorial-next",
+		serviceName: process.env.OTEL_SERVICE_NAME || "playwright-guides-next",
 		attributes: {
-			"service.namespace": "playwright-tutorial",
+			"service.namespace": "playwright-guides",
 			"endform.telemetry.source": "next-app",
 		},
 	});
