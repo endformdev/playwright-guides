@@ -1,10 +1,15 @@
+packages:
+  - suites/*
+
+# Shared versions for the suites in suites/.
+catalog:
+  "@playwright/test": 1.65.0
+  endform: ^0.82.2
+
 allowBuilds:
   better-sqlite3: true
   esbuild: true
   sharp: true
-
-minimumReleaseAgeExclude:
-  - playwright-opentelemetry@0.15.0
 
 onlyBuiltDependencies:
   - better-sqlite3

@@ -1,0 +1,12 @@
+{
+	"name": "suite-01-base-setup",
+	"private": true,
+	"scripts": {
+		"test": "playwright test",
+		"test:endform": "endform test"
+	},
+	"devDependencies": {
+		"@playwright/test": "catalog:",
+		"endform": "catalog:"
+	}
+}

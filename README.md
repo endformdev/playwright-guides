@@ -52,7 +52,7 @@ DEMO_PROFILE=flaky pnpm dev
 
 ## Suites
 
-Each folder in [`suites/`](suites) is a self-contained Playwright suite with its own `playwright.config.ts`. They share the dependencies installed at the root of the repository.
+Each folder in [`suites/`](suites) is a self-contained Playwright suite and a pnpm workspace package, with its own `package.json` and `playwright.config.ts`. Endform identifies a suite by the folder of its `package.json`, so each folder is its own Endform suite. `pnpm install` at the root installs them all.
 
 | Suite                                                   | Tests | App     | What it shows                                                                                                                                    |
 | ------------------------------------------------------- | ----: | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |

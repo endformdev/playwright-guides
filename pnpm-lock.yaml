@@ -162,6 +162,15 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@playwright/test':
+      specifier: 1.65.0
+      version: 1.65.0
+    endform:
+      specifier: ^0.82.2
+      version: 0.82.2
+
 overrides:
   esbuild@<=0.24.2: ^0.25.0
 
@@ -248,12 +257,6 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
-      '@playwright/test':
-        specifier: 1.65.0
-        version: 1.65.0
-      endform:
-        specifier: ^0.82.2
-        version: 0.82.2
       oxfmt:
         specifier: 0.78.0
         version: 0.78.0
@@ -266,6 +269,60 @@ importers:
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
+
+  suites/01-base-setup:
+    devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.65.0
+      endform:
+        specifier: 'catalog:'
+        version: 0.82.2
+
+  suites/02-first-10-tests:
+    devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.65.0
+      endform:
+        specifier: 'catalog:'
+        version: 0.82.2
+
+  suites/03-scaled-suite:
+    devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.65.0
+      endform:
+        specifier: 'catalog:'
+        version: 0.82.2
+
+  suites/04a-speed-unoptimized:
+    devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.65.0
+      endform:
+        specifier: 'catalog:'
+        version: 0.82.2
+
+  suites/04b-speed-optimized:
+    devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.65.0
+      endform:
+        specifier: 'catalog:'
+        version: 0.82.2
+
+  suites/05-flake-lab:
+    devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.65.0
+      endform:
+        specifier: 'catalog:'
+        version: 0.82.2
 
 packages:
 
@@ -909,10 +966,6 @@ packages:
 
   '@opentelemetry/api-logs@0.223.1':
     resolution: {integrity: sha512-DtIY6YRp0Q0GRVtiKH+N6zAoXQzYtlwbXqZEN/UhBgkKgHYPo2RF6vvB8jGebwcESwquS0S3Vn5fouu7dI17Tg==}
-    engines: {node: '>=8.0.0'}
-
-  '@opentelemetry/api@1.10.0':
-    resolution: {integrity: sha512-lMkyes8iHrG+mk6WH7X70MdCLI2RS0FwNBY1PyQ8UemaijE2m5mv5A0Niy3HtbYTFrgkUEQjFMXmSAk2hQDuPQ==}
     engines: {node: '>=8.0.0'}
 
   '@opentelemetry/api@1.9.1':
@@ -3171,9 +3224,7 @@ snapshots:
 
   '@opentelemetry/api-logs@0.223.1':
     dependencies:
-      '@opentelemetry/api': 1.10.0
-
-  '@opentelemetry/api@1.10.0': {}
+      '@opentelemetry/api': 1.9.1
 
   '@opentelemetry/api@1.9.1': {}
 

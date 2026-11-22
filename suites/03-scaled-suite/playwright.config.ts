@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { STORAGE_STATE } from "./support/global-setup";
 
 export const baseURL =
 	process.env.BASE_URL || "https://endform-playwright-guides.vercel.app";
@@ -31,7 +32,7 @@ export default defineConfig({
 		{
 			name: "signed-in",
 			testDir: "./tests/signed-in",
-			use: { storageState: ".auth/user.json" },
+			use: { storageState: STORAGE_STATE },
 		},
 	],
 });

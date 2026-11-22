@@ -1,0 +1,12 @@
+{
+	"name": "suite-02-first-10-tests",
+	"private": true,
+	"scripts": {
+		"test": "playwright test",
+		"test:endform": "endform test"
+	},
+	"devDependencies": {
+		"@playwright/test": "catalog:",
+		"endform": "catalog:"
+	}
+}

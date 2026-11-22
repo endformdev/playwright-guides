@@ -1,0 +1,12 @@
+{
+	"name": "suite-03-scaled-suite",
+	"private": true,
+	"scripts": {
+		"test": "playwright test",
+		"test:endform": "endform test"
+	},
+	"devDependencies": {
+		"@playwright/test": "catalog:",
+		"endform": "catalog:"
+	}
+}
