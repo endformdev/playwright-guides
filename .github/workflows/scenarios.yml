@@ -1,0 +1,66 @@
+name: Refresh scenario pull requests
+
+# Each patch in scenarios/ is kept as an open demo pull request. This resets
+# each demo branch to main, applies its patch, force-pushes it and runs the
+# scaled suite against its new preview deployment, so the pull requests
+# always have recent runs and never drift out of date with main.
+
+on:
+  schedule:
+    - cron: "0 5 * * 1,4"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  refresh:
+    # Skipped until the demo organizations are set up (see README).
+    if: github.repository == 'endformdev/playwright-guides' && vars.ENDFORM_FLAGSHIP_ORG_ID != ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: checkout-regression
+            title: Validate plan names against the plan catalog
+            summary: >-
+              Looks up the purchased plan in a catalog keyed by plan id. The
+              pricing page still sends plan names, so every checkout fails,
+              and the scaled suite's upgrade tests catch it.
+          - scenario: pricing-flow-change
+            title: Rename the Plus plan to Pro and raise its price to $15
+            summary: >-
+              An intended product change. The pricing page and every test
+              that mentions the Plus plan are updated together, so the suite
+              passes with changed tests.
+    env:
+      SCENARIO: ${{ matrix.scenario }}
+      BRANCH: demo/${{ matrix.scenario }}
+      TITLE: ${{ matrix.title }}
+      SUMMARY: ${{ matrix.summary }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reset the demo branch to main and apply the patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git apply "scenarios/$SCENARIO.patch"
+          git commit --all --message "$TITLE"
+          git push --force origin "$BRANCH"
+
+      - name: Open the demo pull request if it isn't open
+        run: |
+          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$SUMMARY
+
+          This is a demo pull request for Endform's guides. It is recreated from \`scenarios/$SCENARIO.patch\` twice a week. Don't merge it."
+          fi
+
+      - name: Run the scaled suite against the new preview deployment
+        run: gh workflow run pull-requests.yml --ref "$BRANCH"

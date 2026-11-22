@@ -1,0 +1,357 @@
+diff --git a/app/(dashboard)/pricing/page.tsx b/app/(dashboard)/pricing/page.tsx
+index 3814537..7342e07 100644
+--- a/app/(dashboard)/pricing/page.tsx
++++ b/app/(dashboard)/pricing/page.tsx
+@@ -15,8 +15,8 @@ const PLANS = [
+ 		],
+ 	},
+ 	{
+-		name: "Plus",
+-		price: 1200, // $12.00 in cents
++		name: "Pro",
++		price: 1500, // $15.00 in cents
+ 		interval: "month",
+ 		trialDays: 7,
+ 		features: [
+diff --git a/suites/02-first-10-tests/tests/account.spec.ts b/suites/02-first-10-tests/tests/account.spec.ts
+index 5014869..f35aa76 100644
+--- a/suites/02-first-10-tests/tests/account.spec.ts
++++ b/suites/02-first-10-tests/tests/account.spec.ts
+@@ -45,13 +45,13 @@ test("owners can invite a team member", async ({ page }) => {
+ 	await expect(page.getByRole("link", { name: /inviteId=/ })).toBeVisible();
+ });
+ 
+-test("users can upgrade to the Plus plan", async ({ page }) => {
++test("users can upgrade to the Pro plan", async ({ page }) => {
+ 	await signUp(page);
+ 	await expect(page.getByText("Current Plan: Free")).toBeVisible();
+ 
+ 	await page.getByRole("link", { name: "Change Plan" }).click();
+ 	await page.getByRole("button", { name: "Get Started" }).nth(1).click();
+-	await expect(page.getByText("You are purchasing: Plus")).toBeVisible();
++	await expect(page.getByText("You are purchasing: Pro")).toBeVisible();
+ 
+ 	await page
+ 		.getByRole("textbox", { name: "Card Holder Name" })
+@@ -71,5 +71,5 @@ test("users can upgrade to the Plus plan", async ({ page }) => {
+ 	await page.getByRole("button", { name: "Complete Purchase" }).click();
+ 
+ 	await expect(page).toHaveURL("/dashboard?payment=success");
+-	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
++	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
+ });
+diff --git a/suites/02-first-10-tests/tests/public.spec.ts b/suites/02-first-10-tests/tests/public.spec.ts
+index a961326..8355d74 100644
+--- a/suites/02-first-10-tests/tests/public.spec.ts
++++ b/suites/02-first-10-tests/tests/public.spec.ts
+@@ -19,8 +19,8 @@ test("pricing page lists both plans", async ({ page }) => {
+ 
+ 	await expect(page.getByRole("heading", { name: "Base" })).toBeVisible();
+ 	await expect(page.getByText("$8 per user / month")).toBeVisible();
+-	await expect(page.getByRole("heading", { name: "Plus" })).toBeVisible();
+-	await expect(page.getByText("$12 per user / month")).toBeVisible();
++	await expect(page.getByRole("heading", { name: "Pro" })).toBeVisible();
++	await expect(page.getByText("$15 per user / month")).toBeVisible();
+ });
+ 
+ test("signed-out visitors are sent to sign in", async ({ page }) => {
+diff --git a/suites/03-scaled-suite/support/pages.ts b/suites/03-scaled-suite/support/pages.ts
+index d575a4d..48441e1 100644
+--- a/suites/03-scaled-suite/support/pages.ts
++++ b/suites/03-scaled-suite/support/pages.ts
+@@ -67,7 +67,7 @@ export class CheckoutPage {
+ 		this.submit = page.getByRole("button", { name: /Complete Purchase/ });
+ 	}
+ 
+-	async goto(plan: "Base" | "Plus") {
++	async goto(plan: "Base" | "Pro") {
+ 		await this.page.goto("/pricing");
+ 		await this.page
+ 			.getByRole("button", { name: "Get Started" })
+@@ -83,7 +83,7 @@ export class CheckoutPage {
+ 		}
+ 	}
+ 
+-	async purchase(plan: "Base" | "Plus") {
++	async purchase(plan: "Base" | "Pro") {
+ 		await this.goto(plan);
+ 		await this.fill();
+ 		await this.submit.click();
+diff --git a/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts b/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts
+index 0b51f4d..308b408 100644
+--- a/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts
++++ b/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts
+@@ -2,7 +2,7 @@ import { expect, test } from "../../support/fixtures";
+ 
+ for (const { plan, price } of [
+ 	{ plan: "Base", price: "$8/month" },
+-	{ plan: "Plus", price: "$12/month" },
++	{ plan: "Pro", price: "$15/month" },
+ ] as const) {
+ 	test(`checkout summarises the ${plan} plan`, async ({
+ 		page,
+@@ -32,17 +32,17 @@ test.describe("upgrading", () => {
+ 		await expect(page.getByText("Billed monthly")).toBeVisible();
+ 	});
+ 
+-	test("upgrading to Plus records exactly one payment", async ({
++	test("upgrading to Pro records exactly one payment", async ({
+ 		page,
+ 		checkoutPage,
+ 	}) => {
+-		await checkoutPage.purchase("Plus");
++		await checkoutPage.purchase("Pro");
+ 
+ 		const payments = await (await page.request.get("/api/payment")).json();
+ 		expect(payments).toHaveLength(1);
+ 		expect(payments[0]).toMatchObject({
+-			planName: "Plus",
+-			amount: 1200,
++			planName: "Pro",
++			amount: 1500,
+ 			currency: "USD",
+ 		});
+ 	});
+@@ -63,7 +63,7 @@ for (const { field, value, reason } of invalidFields) {
+ 		page,
+ 		checkoutPage,
+ 	}) => {
+-		await checkoutPage.goto("Plus");
++		await checkoutPage.goto("Pro");
+ 		await checkoutPage.fill({ [field]: value });
+ 
+ 		await checkoutPage.submit.click();
+diff --git a/suites/03-scaled-suite/tests/signed-out/api.spec.ts b/suites/03-scaled-suite/tests/signed-out/api.spec.ts
+index 7aaaba1..0504375 100644
+--- a/suites/03-scaled-suite/tests/signed-out/api.spec.ts
++++ b/suites/03-scaled-suite/tests/signed-out/api.spec.ts
+@@ -34,7 +34,7 @@ test("submitting a checkout while signed out asks you to sign in", async ({
+ 	page,
+ 	checkoutPage,
+ }) => {
+-	await checkoutPage.goto("Plus");
++	await checkoutPage.goto("Pro");
+ 	await checkoutPage.fill();
+ 	await checkoutPage.submit.click();
+ 
+diff --git a/suites/03-scaled-suite/tests/signed-out/pricing.spec.ts b/suites/03-scaled-suite/tests/signed-out/pricing.spec.ts
+index 7444165..d12dc17 100644
+--- a/suites/03-scaled-suite/tests/signed-out/pricing.spec.ts
++++ b/suites/03-scaled-suite/tests/signed-out/pricing.spec.ts
+@@ -2,7 +2,7 @@ import { expect, test } from "../../support/fixtures";
+ 
+ const plans = [
+ 	{ name: "Base", price: "$8", amount: 800, index: 0 },
+-	{ name: "Plus", price: "$12", amount: 1200, index: 1 },
++	{ name: "Pro", price: "$15", amount: 1500, index: 1 },
+ ];
+ 
+ test.beforeEach(async ({ page }) => {
+@@ -38,7 +38,7 @@ for (const plan of plans) {
+ 	});
+ }
+ 
+-test("Plus includes everything in Base", async ({ page }) => {
++test("Pro includes everything in Base", async ({ page }) => {
+ 	await expect(page.getByText("Everything in Base, and:")).toBeVisible();
+ 	await expect(page.getByText("24/7 Support + Slack Access")).toBeVisible();
+ });
+diff --git a/suites/03-scaled-suite/tests/signed-out/sign-up.spec.ts b/suites/03-scaled-suite/tests/signed-out/sign-up.spec.ts
+index 59daf56..d6fb164 100644
+--- a/suites/03-scaled-suite/tests/signed-out/sign-up.spec.ts
++++ b/suites/03-scaled-suite/tests/signed-out/sign-up.spec.ts
+@@ -58,10 +58,10 @@ test("signing up from a checkout link returns to that checkout", async ({
+ 	page,
+ 	authForm,
+ }) => {
+-	await page.goto("/sign-up?redirect=checkout&plan=Plus&amount=1200");
++	await page.goto("/sign-up?redirect=checkout&plan=Pro&amount=1500");
+ 
+ 	await authForm.signUp(uniqueEmail(), PASSWORD);
+ 
+-	await expect(page).toHaveURL("/pricing/checkout?plan=Plus&amount=1200");
+-	await expect(page.getByText("You are purchasing: Plus")).toBeVisible();
++	await expect(page).toHaveURL("/pricing/checkout?plan=Pro&amount=1500");
++	await expect(page.getByText("You are purchasing: Pro")).toBeVisible();
+ });
+diff --git a/suites/04a-speed-unoptimized/tests/billing.spec.ts b/suites/04a-speed-unoptimized/tests/billing.spec.ts
+index 1ce59da..55d07e8 100644
+--- a/suites/04a-speed-unoptimized/tests/billing.spec.ts
++++ b/suites/04a-speed-unoptimized/tests/billing.spec.ts
+@@ -12,39 +12,39 @@ test("upgrading to Base starts a subscription", async ({ page }) => {
+ 	await expect(page.getByText("Billed monthly")).toBeVisible();
+ });
+ 
+-test("upgrading to Plus starts a subscription", async ({ page }) => {
+-	await purchase(page, "Plus");
++test("upgrading to Pro starts a subscription", async ({ page }) => {
++	await purchase(page, "Pro");
+ 
+-	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
++	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
+ });
+ 
+ test("an upgrade records exactly one payment", async ({ page }) => {
+-	await purchase(page, "Plus");
++	await purchase(page, "Pro");
+ 
+ 	const payments = await (await page.request.get("/api/payment")).json();
+ 	expect(payments).toHaveLength(1);
+-	expect(payments[0]).toMatchObject({ planName: "Plus", amount: 1200 });
++	expect(payments[0]).toMatchObject({ planName: "Pro", amount: 1500 });
+ });
+ 
+-test("switching from Base to Plus records both payments", async ({ page }) => {
++test("switching from Base to Pro records both payments", async ({ page }) => {
+ 	await purchase(page, "Base");
+-	await purchase(page, "Plus");
++	await purchase(page, "Pro");
+ 
+-	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
++	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
+ 	const payments = await (await page.request.get("/api/payment")).json();
+ 	expect(payments).toHaveLength(2);
+ });
+ 
+ test("checkout summarises the chosen plan", async ({ page }) => {
+-	await page.goto("/pricing/checkout?plan=Plus&amount=1200");
++	await page.goto("/pricing/checkout?plan=Pro&amount=1500");
+ 
+ 	await expect(
+-		page.getByText("You are purchasing: Plus for $12/month"),
++		page.getByText("You are purchasing: Pro for $15/month"),
+ 	).toBeVisible();
+ });
+ 
+ test("an invalid card number can't be submitted", async ({ page }) => {
+-	await page.goto("/pricing/checkout?plan=Plus&amount=1200");
++	await page.goto("/pricing/checkout?plan=Pro&amount=1500");
+ 	await fillCheckout(page, "1234");
+ 
+ 	await page.getByRole("button", { name: /Complete Purchase/ }).click();
+diff --git a/suites/04a-speed-unoptimized/tests/helpers.ts b/suites/04a-speed-unoptimized/tests/helpers.ts
+index cb7c013..bf44ae2 100644
+--- a/suites/04a-speed-unoptimized/tests/helpers.ts
++++ b/suites/04a-speed-unoptimized/tests/helpers.ts
+@@ -70,7 +70,7 @@ export async function invite(page: Page, email: string) {
+ 	return (await link.getAttribute("href")) as string;
+ }
+ 
+-export async function purchase(page: Page, plan: "Base" | "Plus") {
++export async function purchase(page: Page, plan: "Base" | "Pro") {
+ 	await page.goto("/pricing");
+ 	await page
+ 		.getByRole("button", { name: "Get Started" })
+diff --git a/suites/04b-speed-optimized/support/actions.ts b/suites/04b-speed-optimized/support/actions.ts
+index 14a7a09..d1f9e22 100644
+--- a/suites/04b-speed-optimized/support/actions.ts
++++ b/suites/04b-speed-optimized/support/actions.ts
+@@ -49,7 +49,7 @@ export async function invite(page: Page, email: string) {
+ 	return (await link.getAttribute("href")) as string;
+ }
+ 
+-export async function purchase(page: Page, plan: "Base" | "Plus") {
++export async function purchase(page: Page, plan: "Base" | "Pro") {
+ 	await page.goto("/pricing");
+ 	await page
+ 		.getByRole("button", { name: "Get Started" })
+diff --git a/suites/04b-speed-optimized/tests/billing.spec.ts b/suites/04b-speed-optimized/tests/billing.spec.ts
+index 1fb98e2..f7c0635 100644
+--- a/suites/04b-speed-optimized/tests/billing.spec.ts
++++ b/suites/04b-speed-optimized/tests/billing.spec.ts
+@@ -2,15 +2,15 @@ import { fillCheckout, purchase } from "../support/actions";
+ import { expect, test } from "../support/fixtures";
+ 
+ test("checkout summarises the chosen plan", async ({ page }) => {
+-	await page.goto("/pricing/checkout?plan=Plus&amount=1200");
++	await page.goto("/pricing/checkout?plan=Pro&amount=1500");
+ 
+ 	await expect(
+-		page.getByText("You are purchasing: Plus for $12/month"),
++		page.getByText("You are purchasing: Pro for $15/month"),
+ 	).toBeVisible();
+ });
+ 
+ test("an invalid card number can't be submitted", async ({ page }) => {
+-	await page.goto("/pricing/checkout?plan=Plus&amount=1200");
++	await page.goto("/pricing/checkout?plan=Pro&amount=1500");
+ 	await fillCheckout(page, "1234");
+ 
+ 	await page.getByRole("button", { name: /Complete Purchase/ }).click();
+@@ -33,27 +33,25 @@ test.describe("upgrading", { tag: "@payments" }, () => {
+ 		await expect(page.getByText("Billed monthly")).toBeVisible();
+ 	});
+ 
+-	test("upgrading to Plus starts a subscription", async ({ page }) => {
+-		await purchase(page, "Plus");
++	test("upgrading to Pro starts a subscription", async ({ page }) => {
++		await purchase(page, "Pro");
+ 
+-		await expect(page.getByText("Current Plan: Plus")).toBeVisible();
++		await expect(page.getByText("Current Plan: Pro")).toBeVisible();
+ 	});
+ 
+ 	test("an upgrade records exactly one payment", async ({ page }) => {
+-		await purchase(page, "Plus");
++		await purchase(page, "Pro");
+ 
+ 		const payments = await (await page.request.get("/api/payment")).json();
+ 		expect(payments).toHaveLength(1);
+-		expect(payments[0]).toMatchObject({ planName: "Plus", amount: 1200 });
++		expect(payments[0]).toMatchObject({ planName: "Pro", amount: 1500 });
+ 	});
+ 
+-	test("switching from Base to Plus records both payments", async ({
+-		page,
+-	}) => {
++	test("switching from Base to Pro records both payments", async ({ page }) => {
+ 		await purchase(page, "Base");
+-		await purchase(page, "Plus");
++		await purchase(page, "Pro");
+ 
+-		await expect(page.getByText("Current Plan: Plus")).toBeVisible();
++		await expect(page.getByText("Current Plan: Pro")).toBeVisible();
+ 		const payments = await (await page.request.get("/api/payment")).json();
+ 		expect(payments).toHaveLength(2);
+ 	});
+diff --git a/suites/05-flake-lab/tests/billing.spec.ts b/suites/05-flake-lab/tests/billing.spec.ts
+index fb75f8c..2ab3c5e 100644
+--- a/suites/05-flake-lab/tests/billing.spec.ts
++++ b/suites/05-flake-lab/tests/billing.spec.ts
+@@ -16,14 +16,14 @@ async function fillCheckout(page: import("@playwright/test").Page) {
+ }
+ 
+ test("checkout explains which plan is being bought", async ({ page }) => {
+-	await test.step("Choose the Plus plan", async () => {
++	await test.step("Choose the Pro plan", async () => {
+ 		await page.goto("/pricing");
+ 		await page.getByRole("button", { name: "Get Started" }).nth(1).click();
+ 	});
+ 
+ 	await test.step("See the plan and its price on the checkout", async () => {
+ 		await expect(
+-			page.getByText("You are purchasing: Plus for $12/month"),
++			page.getByText("You are purchasing: Pro for $15/month"),
+ 		).toBeVisible();
+ 	});
+ });
+@@ -37,16 +37,16 @@ test("an upgrade shows the new plan on the team page", async ({
+ 		await expect(page.getByText("Current Plan: Free")).toBeVisible();
+ 	});
+ 
+-	await test.step("Buy the Plus plan", async () => {
++	await test.step("Buy the Pro plan", async () => {
+ 		await page.getByRole("link", { name: "Change Plan" }).click();
+ 		await page.getByRole("button", { name: "Get Started" }).nth(1).click();
+ 		await fillCheckout(page);
+ 		await page.getByRole("button", { name: /Complete Purchase/ }).click();
+ 	});
+ 
+-	await test.step("See the team on the Plus plan", async () => {
++	await test.step("See the team on the Pro plan", async () => {
+ 		await expect(page).toHaveURL("/dashboard?payment=success");
+-		await expect(page.getByText("Current Plan: Plus")).toBeVisible();
++		await expect(page.getByText("Current Plan: Pro")).toBeVisible();
+ 	});
+ });
+ 

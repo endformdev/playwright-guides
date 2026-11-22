@@ -1,0 +1,62 @@
+name: Run a suite on Endform
+
+# Called by the other workflows. Waits for the Vercel deployment of the
+# current commit, then runs one suite from suites/ against it on Endform.
+
+on:
+  workflow_call:
+    inputs:
+      suite:
+        description: Folder in suites/ to run
+        type: string
+        required: true
+      vercel-project:
+        description: Vercel project whose deployment the suite runs against
+        type: string
+        required: true
+      organization-id:
+        description: Endform organization to run the suite in
+        type: string
+        required: true
+      allow-failure:
+        description: Don't fail the workflow when tests fail
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write # required for authentication with Endform
+
+jobs:
+  run:
+    name: ${{ inputs.suite }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ inputs.allow-failure }}
+    defaults:
+      run:
+        working-directory: suites/${{ inputs.suite }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+
+      - name: Wait for the Vercel deployment
+        uses: endformdev/actions/run-with-vercel-deployment@main
+        with:
+          project-name: ${{ inputs.vercel-project }}
+          set-url-env-var: BASE_URL
+          set-vercel-bypass-env-var: VERCEL_BYPASS_TOKEN
+
+      - name: Run the suite on Endform
+        run: npx endform@latest test --organization-id "${{ inputs.organization-id }}"

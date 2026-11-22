@@ -1,0 +1,39 @@
+name: Guide suites on main
+
+# Keeps the Flagship demo organization's runs fresh: on every push to main,
+# and daily so runs never age out of retention.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  suite:
+    # Skipped until the demo organizations are set up (see README).
+    if: github.repository == 'endformdev/playwright-guides' && vars.ENDFORM_FLAGSHIP_ORG_ID != ''
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: 01-base-setup
+            vercel-project: endform-playwright-guides
+          - suite: 02-first-10-tests
+            vercel-project: endform-playwright-guides
+          - suite: 03-scaled-suite
+            vercel-project: endform-playwright-guides
+          - suite: 04a-speed-unoptimized
+            vercel-project: endform-playwright-guides-slow
+          - suite: 04b-speed-optimized
+            vercel-project: endform-playwright-guides-slow
+    uses: ./.github/workflows/run-suite.yml
+    with:
+      suite: ${{ matrix.suite }}
+      vercel-project: ${{ matrix.vercel-project }}
+      organization-id: ${{ vars.ENDFORM_FLAGSHIP_ORG_ID }}

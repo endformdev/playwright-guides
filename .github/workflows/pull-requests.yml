@@ -1,0 +1,23 @@
+name: Scaled suite on pull requests
+
+# Runs the scaled suite against each pull request's preview deployment. The
+# scenario workflow also starts it on the demo branches it refreshes.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  scaled-suite:
+    # Skipped until the demo organizations are set up (see README).
+    if: github.repository == 'endformdev/playwright-guides' && vars.ENDFORM_FLAGSHIP_ORG_ID != ''
+    uses: ./.github/workflows/run-suite.yml
+    with:
+      suite: 03-scaled-suite
+      vercel-project: endform-playwright-guides
+      organization-id: ${{ vars.ENDFORM_FLAGSHIP_ORG_ID }}

@@ -1,8 +1,18 @@
 # Playwright guides example app
 
-The example SaaS application behind [Endform](https://endform.dev)'s Playwright guides.
+The example SaaS application and Playwright suites behind [Endform](https://endform.dev)'s guides.
 
-It is a small but realistic SaaS app (sign up, teams, invitations, a pricing and checkout flow, and an activity log) that the guides write Playwright suites against. It runs with zero setup: no database or auth environment variables are needed.
+It is a small but realistic SaaS app (sign up, teams, invitations, a pricing and checkout flow, and an activity log) with a set of progressively more advanced Playwright suites written against it. The app runs with zero setup: no database or auth environment variables are needed.
+
+## Repository layout
+
+```text
+app/, components/, lib/   The Next.js SaaS app
+lib/demo-profile.ts       Everything that differs between the clean, slow and flaky apps
+suites/                   One Playwright suite per folder, each its own Endform suite
+scenarios/                Patches that are kept open as demo pull requests
+cf/                       The Cloudflare Durable Object that hosts the demo databases
+```
 
 ## Getting started
 
@@ -15,7 +25,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-By default the app connects to a shared demo SQLite database through an HTTP proxy backed by a Cloudflare Durable Object (see [`cf/`](cf)). That database is public and wiped on a schedule, so it is only meant for quick starts and testing.
+By default the app connects to a shared demo SQLite database through an HTTP proxy backed by a Cloudflare Durable Object (see [`cf/`](cf)). That database is public and wiped every hour, so it is only meant for demos and tests.
 
 To use your own local SQLite file instead, create `.env` and run the migrations, then optionally seed it:
 
@@ -24,43 +34,103 @@ pnpm db:setup
 pnpm db:seed
 ```
 
-## Features
+## Demo profiles
 
-- Marketing landing page (`/`) with an animated terminal
-- Pricing page (`/pricing`) with a dummy checkout flow
-- Dashboard pages for managing your account and team
-- Basic RBAC with Owner and Member roles
-- Email/password authentication with JWTs stored in cookies
-- Global middleware to protect logged-in routes, and local middleware to protect Server Actions and validate Zod schemas
-- Activity logging for user events
-- An internal API (`/api/internal/user`) for creating and deleting users from test setup code
-- Optional OpenTelemetry tracing, enabled when `OTEL_EXPORTER_OTLP_ENDPOINT` is set
+The same app is deployed three times, differing only in the `DEMO_PROFILE` environment variable:
 
-### Dummy payments
+| Profile           | Behaviour                                                                                                                                                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `clean` (default) | A fast, well-behaved app.                                                                                                                                                                                                                   |
+| `slow`            | Slow sign-ups (a third-party risk check), slow sign-ins, a slow activity query, and a payment provider that takes about 2s per charge and only handles 2 charges at a time per server.                                                      |
+| `flaky`           | A team cache that occasionally lags behind writes, transient 503s from the team API and the invitation email provider, a settings form that re-syncs over typed input, unstable ordering of same-second activity, and a late cookie dialog. |
 
-The checkout flow stores payments in the database but never processes real ones:
+Every profile-specific behaviour lives in [`lib/demo-profile.ts`](lib/demo-profile.ts) and [`components/demo-profile-provider.tsx`](components/demo-profile-provider.tsx), so the rest of the app reads like a normal SaaS codebase. Run a profile locally with:
 
-- **Card number**: any 8-digit number (e.g. `12345678`)
-- **Expiration**: any future date in MM/YY format
-- **CVV**: any 3-digit number
-- **Billing address**: anything
+```bash
+DEMO_PROFILE=flaky pnpm dev
+```
 
-## Tech stack
+## Suites
 
-- **Framework**: [Next.js](https://nextjs.org/)
-- **Database**: [SQLite](https://www.sqlite.org/) via a shared Cloudflare Durable Object proxy by default, with optional local file SQLite and [Turso](https://turso.tech/) support
-- **ORM**: [Drizzle](https://orm.drizzle.team/)
-- **UI**: [shadcn/ui](https://ui.shadcn.com/)
+Each folder in [`suites/`](suites) is a self-contained Playwright suite with its own `playwright.config.ts`. They share the dependencies installed at the root of the repository.
 
-The app is based on the [Next.js SaaS Starter](https://github.com/nextjs/saas-starter), modified to use SQLite instead of Postgres and a dummy payment system instead of Stripe.
+| Suite                                                   | Tests | App     | What it shows                                                                                                                                    |
+| ------------------------------------------------------- | ----: | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`01-base-setup`](suites/01-base-setup)                 |     1 | `clean` | A minimal config and one smoke test.                                                                                                             |
+| [`02-first-10-tests`](suites/02-first-10-tests)         |    10 | `clean` | Ten readable tests with a few plain helper functions.                                                                                            |
+| [`03-scaled-suite`](suites/03-scaled-suite)             |    69 | `clean` | Fixtures, page objects, a shared signed-in user from global setup, per-test users for tests that change data, and signed-in/signed-out projects. |
+| [`04a-speed-unoptimized`](suites/04a-speed-unoptimized) |    20 | `slow`  | Every test signs up through the UI, and files run serially.                                                                                      |
+| [`04b-speed-optimized`](suites/04b-speed-optimized)     |    20 | `slow`  | The same tests, fully parallel, with users from the API, and a concurrency limit for payment tests in `endform.config.ts`.                       |
+| [`05-flake-lab`](suites/05-flake-lab)                   |    12 | `flaky` | Tests written as natural-language steps. Six are robust; six flake from the flaky app or from common flaky patterns in the test code.            |
+
+Run a suite against your local app:
+
+```bash
+cd suites/03-scaled-suite
+BASE_URL=http://localhost:3000 npx playwright test
+```
+
+Or on Endform:
+
+```bash
+cd suites/03-scaled-suite
+BASE_URL=http://localhost:3000 npx endform@latest test
+```
+
+Without `BASE_URL`, each suite runs against the deployment of its profile.
+
+## Scenarios
+
+Each patch in [`scenarios/`](scenarios) is kept open as a demo pull request on a `demo/<name>` branch. The [scenario workflow](.github/workflows/scenarios.yml) recreates each branch from `main` twice a week, so the patches never go stale, and runs the scaled suite against its preview deployment.
+
+- `checkout-regression`: a refactor that breaks every checkout. The scaled suite's upgrade tests fail.
+- `pricing-flow-change`: renames the Plus plan to Pro at $15, updating the tests with it. The suite passes with changed tests.
+
+To update a patch, apply it, make the change, and write the diff back:
+
+```bash
+git apply scenarios/checkout-regression.patch
+# ...edit...
+git diff > scenarios/checkout-regression.patch
+git checkout .
+```
+
+## Deployments and demo organizations
+
+| Vercel project                    | `DEMO_PROFILE` | Suites                       | Endform organization |
+| --------------------------------- | -------------- | ---------------------------- | -------------------- |
+| `endform-playwright-guides`       | `clean`        | 01, 02, 03 and pull requests | Flagship             |
+| `endform-playwright-guides-slow`  | `slow`         | 04a, 04b                     | Flagship             |
+| `endform-playwright-guides-flaky` | `flaky`        | 05                           | Flake Lab            |
+
+The workflows in [`.github/workflows`](.github/workflows) keep the public demo organizations' runs fresh:
+
+- [`suites-on-main.yml`](.github/workflows/suites-on-main.yml): suites 01 to 04b, on every push to `main` and daily.
+- [`flake-lab.yml`](.github/workflows/flake-lab.yml): the flake lab, every 6 hours. Its failures don't fail the workflow.
+- [`pull-requests.yml`](.github/workflows/pull-requests.yml): the scaled suite against each pull request's preview.
+- [`scenarios.yml`](.github/workflows/scenarios.yml): refreshes the scenario pull requests.
+
+The workflows stay skipped until these repository variables are set:
+
+- `ENDFORM_FLAGSHIP_ORG_ID`: the Endform organization for the clean and slow suites.
+- `ENDFORM_FLAKE_LAB_ORG_ID`: the Endform organization for the flake lab.
+
+Both organizations need this repository connected so GitHub Actions can authenticate, and the Endform Vercel integration needs access to the three Vercel projects so the workflows can find their deployments.
 
 ## Environment variables
 
 All of these are optional:
 
-| Variable              | Purpose                                                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`        | Unset: the shared Durable Object proxy. Otherwise a local SQLite path, your own proxy URL, or a Turso URL (`libsql://…`). |
-| `DATABASE_AUTH_TOKEN` | Required when `DATABASE_URL` is a Turso URL.                                                                              |
-| `AUTH_SECRET`         | Falls back to a built-in demo secret. Set it to a random string (`openssl rand -base64 32`) for any non-demo deployment.  |
-| `BASE_URL`            | The app's public URL.                                                                                                     |
+| Variable              | Purpose                                                                                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEMO_PROFILE`        | `clean` (default), `slow` or `flaky`.                                                                                                                     |
+| `DATABASE_URL`        | Unset: the shared Durable Object proxy. Otherwise a local SQLite path, a proxy URL (a path such as `/flaky` selects a separate database), or a Turso URL. |
+| `DATABASE_AUTH_TOKEN` | Required when `DATABASE_URL` is a Turso URL.                                                                                                              |
+| `AUTH_SECRET`         | Falls back to a built-in demo secret. Set it to a random string (`openssl rand -base64 32`) for any non-demo deployment.                                  |
+| `BASE_URL`            | The app's public URL.                                                                                                                                     |
+
+## About the app
+
+The app is based on the [Next.js SaaS Starter](https://github.com/nextjs/saas-starter), modified to use SQLite instead of Postgres and a dummy payment system instead of Stripe. The checkout accepts any 8-digit card number (e.g. `12345678`), any future MM/YY expiry, and any 3-digit CVV, and never processes real payments.
+
+Tech stack: [Next.js](https://nextjs.org/), [Drizzle](https://orm.drizzle.team/), SQLite (via a Cloudflare Durable Object, a local file, or [Turso](https://turso.tech/)), and [shadcn/ui](https://ui.shadcn.com/).
