@@ -1,10 +1,10 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { Suspense, useActionState, useEffect } from "react";
+import { type Ref, Suspense, useActionState, useEffect, useRef } from "react";
 import useSWR, { mutate } from "swr";
 import { updateAccount } from "@/app/(login)/actions";
-import { usePlaceholderInputsAreEditable } from "@/components/demo-profile-provider";
+import { useFormResyncsOnEveryFetch } from "@/components/demo-profile-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,8 @@ type AccountFormProps = {
 	nameValue?: string;
 	emailValue?: string;
 	disabled?: boolean;
+	nameRef?: Ref<HTMLInputElement>;
+	emailRef?: Ref<HTMLInputElement>;
 };
 
 function AccountForm({
@@ -30,6 +32,8 @@ function AccountForm({
 	nameValue = "",
 	emailValue = "",
 	disabled = false,
+	nameRef,
+	emailRef,
 }: AccountFormProps) {
 	return (
 		<>
@@ -39,6 +43,7 @@ function AccountForm({
 				</Label>
 				<Input
 					id="name"
+					ref={nameRef}
 					name="name"
 					placeholder="Enter your name"
 					defaultValue={state.name || nameValue}
@@ -52,6 +57,7 @@ function AccountForm({
 				</Label>
 				<Input
 					id="email"
+					ref={emailRef}
 					name="email"
 					type="email"
 					placeholder="Enter your email"
@@ -65,19 +71,28 @@ function AccountForm({
 }
 
 function AccountFormWithData({ state }: { state: ActionState }) {
+	const resyncOnEveryFetch = useFormResyncsOnEveryFetch();
+	const nameRef = useRef<HTMLInputElement>(null);
+	const emailRef = useRef<HTMLInputElement>(null);
 	const { data: user } = useSWR<User>("/api/user", fetcher);
+
+	useEffect(() => {
+		if (!resyncOnEveryFetch) return;
+		void fetcher<User>("/api/user").then((fresh) => {
+			if (nameRef.current) nameRef.current.value = fresh.name ?? "";
+			if (emailRef.current) emailRef.current.value = fresh.email;
+		});
+	}, [resyncOnEveryFetch]);
+
 	return (
 		<AccountForm
 			state={state}
 			nameValue={user?.name ?? ""}
 			emailValue={user?.email ?? ""}
+			nameRef={nameRef}
+			emailRef={emailRef}
 		/>
 	);
-}
-
-function AccountFormPlaceholder({ state }: { state: ActionState }) {
-	const editable = usePlaceholderInputsAreEditable();
-	return <AccountForm state={state} disabled={!editable} />;
 }
 
 export default function GeneralPage() {
@@ -107,7 +122,7 @@ export default function GeneralPage() {
 				</CardHeader>
 				<CardContent>
 					<form className="space-y-4" action={formAction}>
-						<Suspense fallback={<AccountFormPlaceholder state={state} />}>
+						<Suspense fallback={<AccountForm state={state} disabled />}>
 							<AccountFormWithData state={state} />
 						</Suspense>
 						{state.error && (

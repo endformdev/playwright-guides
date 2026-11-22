@@ -5,10 +5,7 @@ import { SWRConfig } from "swr";
 import { CookieBanner } from "@/components/cookie-banner";
 import { DemoProfileProvider } from "@/components/demo-profile-provider";
 import { getTeamForUser, getUser } from "@/lib/db/queries";
-import {
-	getCookieBannerDelayRangeMs,
-	getDemoProfile,
-} from "@/lib/demo-profile";
+import { getCookieBannerTiming, getDemoProfile } from "@/lib/demo-profile";
 
 export const metadata: Metadata = {
 	title: "ACME",
@@ -27,7 +24,7 @@ export default function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const cookieBannerDelayRangeMs = getCookieBannerDelayRangeMs();
+	const cookieBannerTiming = getCookieBannerTiming();
 
 	return (
 		<html
@@ -49,9 +46,7 @@ export default function RootLayout({
 						{children}
 					</SWRConfig>
 				</DemoProfileProvider>
-				{cookieBannerDelayRangeMs && (
-					<CookieBanner delayRangeMs={cookieBannerDelayRangeMs} />
-				)}
+				{cookieBannerTiming && <CookieBanner timing={cookieBannerTiming} />}
 			</body>
 		</html>
 	);

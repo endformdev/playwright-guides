@@ -90,13 +90,20 @@ export function hasTransientUpstreamFailure(
 	);
 }
 
-const TEAM_CACHE_MAX_TTL_MS = 4000;
 const teamCache = new Map<number, { value: unknown; expiresAt: number }>();
 
+/** Usually a cached team expires almost at once, sometimes it lingers. */
+function teamCacheTtlMs() {
+	return Math.random() < 0.07
+		? 1500 + Math.random() * 2000
+		: Math.random() * 200;
+}
+
 /**
- * Under the `flaky` profile, team reads go through an in-memory cache with a
- * short, uneven expiry, like a read replica or edge cache that lags behind
- * writes. Right after a change, the team can be returned as it was before it.
+ * Under the `flaky` profile, team reads go through an in-memory cache with an
+ * uneven expiry, like a read replica that usually keeps up but now and then
+ * lags behind writes. Right after a change, the team can occasionally be
+ * returned as it was before it.
  */
 export async function readThroughTeamCache<T>(
 	userId: number,
@@ -110,28 +117,51 @@ export async function readThroughTeamCache<T>(
 	const value = await load();
 	teamCache.set(userId, {
 		value,
-		expiresAt: Date.now() + Math.random() * TEAM_CACHE_MAX_TTL_MS,
+		expiresAt: Date.now() + teamCacheTtlMs(),
 	});
 	return value;
 }
 
+export type CookieBannerTiming = {
+	/** How long the consent script usually takes to show the banner. */
+	usualDelayMs: [number, number];
+	/** How long it takes when the script loads slowly. */
+	slowDelayMs: [number, number];
+	/** How often the script loads slowly. */
+	slowRate: number;
+};
+
 /**
- * Under the `flaky` profile, a cookie consent banner appears a moment after
- * the page loads, at a slightly different time on every load.
+ * Under the `flaky` profile, a cookie consent dialog covers the page a moment
+ * after it loads. Usually it appears within a second, but now and then the
+ * consent script loads slowly and the dialog shows up a few seconds in.
  */
-export function getCookieBannerDelayRangeMs(): [number, number] | null {
+export function getCookieBannerTiming(): CookieBannerTiming | null {
 	if (getDemoProfile() !== "flaky") return null;
-	return [200, 2500];
+	return {
+		usualDelayMs: [300, 900],
+		slowDelayMs: [1300, 2500],
+		slowRate: 0.2,
+	};
 }
 
 /**
  * Activity entries are stored with second precision. The `clean` and `slow`
- * profiles break ties by insertion order. Under the `flaky` profile ties come
- * back in whatever order the database returns them, like a query without a
- * deterministic sort key.
+ * profiles break ties by insertion order. Under the `flaky` profile ties
+ * sometimes come back in a different order, like a query without a
+ * deterministic sort key whose plan changes with the table's statistics.
  */
 export function shouldShuffleActivityTies() {
-	return getDemoProfile() === "flaky";
+	return getDemoProfile() === "flaky" && Math.random() < 0.2;
+}
+
+/**
+ * Under the `flaky` profile, some requests for the current user are served by
+ * a slow replica and take a second or two.
+ */
+export async function simulateSlowUserRead() {
+	if (getDemoProfile() !== "flaky" || Math.random() >= 0.12) return;
+	await sleep(700 + Math.random() * 1300);
 }
 
 // --- helpers -------------------------------------------------------------

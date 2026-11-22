@@ -5,23 +5,28 @@ import { Button } from "@/components/ui/button";
 
 const CONSENT_COOKIE = "cookie-consent";
 
-export function CookieBanner({
-	delayRangeMs,
-}: {
-	delayRangeMs: [number, number];
-}) {
+type CookieBannerTiming = {
+	usualDelayMs: [number, number];
+	slowDelayMs: [number, number];
+	slowRate: number;
+};
+
+export function CookieBanner({ timing }: { timing: CookieBannerTiming }) {
 	const [visible, setVisible] = useState(false);
 
 	useEffect(() => {
 		if (document.cookie.includes(`${CONSENT_COOKIE}=`)) return;
 
-		const [min, max] = delayRangeMs;
+		const [min, max] =
+			Math.random() < timing.slowRate
+				? timing.slowDelayMs
+				: timing.usualDelayMs;
 		const timer = setTimeout(
 			() => setVisible(true),
 			min + Math.random() * (max - min),
 		);
 		return () => clearTimeout(timer);
-	}, [delayRangeMs]);
+	}, [timing]);
 
 	if (!visible) return null;
 
@@ -31,16 +36,20 @@ export function CookieBanner({
 	}
 
 	return (
-		<div
-			role="dialog"
-			aria-label="Cookie consent"
-			className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white p-4 shadow-lg"
-		>
-			<div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-				<p className="text-sm text-gray-700">
+		<div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+			<div
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="cookie-consent-title"
+				className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+			>
+				<h2 id="cookie-consent-title" className="text-lg font-medium">
+					We value your privacy
+				</h2>
+				<p className="mt-2 text-sm text-gray-700">
 					We use cookies to understand how ACME is used and to improve it.
 				</p>
-				<div className="flex gap-2">
+				<div className="mt-4 flex justify-end gap-2">
 					<Button variant="outline" onClick={() => choose("essential")}>
 						Essential only
 					</Button>

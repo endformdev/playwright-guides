@@ -25,11 +25,12 @@ export function DemoProfileProvider({
 }
 
 /**
- * Forms render placeholder inputs while their data loads, then swap in the
- * real inputs. The placeholders are disabled so nothing typed into them is
- * lost. Under the `flaky` profile they stay editable: whatever is typed
- * before the data arrives is silently replaced, a classic hydration race.
+ * Under the `flaky` profile, the account form refetches the user when it
+ * opens and copies the fresh details into its inputs when they arrive. When
+ * that refetch is slow and finishes after someone started typing, it silently
+ * overwrites what they typed, a classic race between loading data and user
+ * input.
  */
-export function usePlaceholderInputsAreEditable() {
+export function useFormResyncsOnEveryFetch() {
 	return useContext(DemoProfileContext) === "flaky";
 }
