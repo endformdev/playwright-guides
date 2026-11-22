@@ -11,6 +11,7 @@ import {
 	teams,
 	users,
 } from "@/lib/db/schema";
+import { simulateLatency } from "@/lib/demo-profile";
 import { logActivity } from "./activity";
 
 export async function signup(
@@ -18,6 +19,8 @@ export async function signup(
 	password: string,
 	inviteId?: string,
 ) {
+	await simulateLatency("signUp");
+
 	const existingUser = await db
 		.select()
 		.from(users)

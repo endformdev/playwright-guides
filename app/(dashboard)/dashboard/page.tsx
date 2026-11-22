@@ -2,7 +2,7 @@
 
 import { Loader2, PlusCircle } from "lucide-react";
 import { Suspense, useActionState, useEffect } from "react";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { inviteTeamMember, removeTeamMember } from "@/app/(login)/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -17,14 +17,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { TeamDataWithMembers, User } from "@/lib/db/schema";
+import { fetcher } from "@/lib/fetcher";
 
 type ActionState = {
 	error?: string;
 	success?: string;
 	id?: number;
+	email?: string;
 };
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 function SubscriptionSkeleton() {
 	return (
@@ -92,12 +92,26 @@ function TeamMembersSkeleton() {
 	);
 }
 
+function useIsTeamOwner() {
+	const { data: user } = useSWR<User>("/api/user", fetcher);
+	const { data: teamData } = useSWR<TeamDataWithMembers>("/api/team", fetcher);
+	const role = teamData?.teamMembers.find(
+		(member) => member.user.id === user?.id,
+	)?.role;
+	return { user, isOwner: role === "owner" };
+}
+
 function TeamMembers() {
 	const { data: teamData } = useSWR<TeamDataWithMembers>("/api/team", fetcher);
+	const { user, isOwner } = useIsTeamOwner();
 	const [removeState, removeAction, isRemovePending] = useActionState<
 		ActionState,
 		FormData
 	>(removeTeamMember, {});
+
+	useEffect(() => {
+		if (removeState?.success) mutate("/api/team");
+	}, [removeState]);
 
 	const getUserDisplayName = (user: Pick<User, "id" | "name" | "email">) => {
 		return user.name || user.email || "Unknown User";
@@ -123,7 +137,7 @@ function TeamMembers() {
 			</CardHeader>
 			<CardContent>
 				<ul className="space-y-4">
-					{teamData.teamMembers.map((member, index) => (
+					{teamData.teamMembers.map((member) => (
 						<li
 							data-testid="team-member"
 							key={member.id}
@@ -159,7 +173,7 @@ function TeamMembers() {
 									</p>
 								</div>
 							</div>
-							{index > 1 ? (
+							{isOwner && member.user.id !== user?.id ? (
 								<form action={removeAction}>
 									<input type="hidden" name="memberId" value={member.id} />
 									<Button
@@ -194,18 +208,11 @@ function InviteTeamMemberSkeleton() {
 }
 
 function InviteTeamMember() {
-	const { data: user } = useSWR<User>("/api/user", fetcher);
-	const isOwner = user?.role === "owner";
+	const { isOwner } = useIsTeamOwner();
 	const [inviteState, inviteAction, isInvitePending] = useActionState<
 		ActionState,
 		FormData
 	>(inviteTeamMember, {});
-
-	useEffect(() => {
-		if (inviteState?.id) {
-			console.log("[inviteState]", inviteState.id);
-		}
-	}, [inviteState]);
 
 	return (
 		<Card>
@@ -249,7 +256,20 @@ function InviteTeamMember() {
 						<p className="text-red-500">{inviteState.error}</p>
 					)}
 					{inviteState?.success && (
-						<p className="text-green-500">{inviteState.success}</p>
+						<div className="space-y-1">
+							<p className="text-green-500">{inviteState.success}</p>
+							{inviteState.id && (
+								<p className="text-sm text-muted-foreground">
+									Invite link for {inviteState.email}:{" "}
+									<a
+										href={`/sign-up?inviteId=${inviteState.id}`}
+										className="underline"
+									>
+										{`/sign-up?inviteId=${inviteState.id}`}
+									</a>
+								</p>
+							)}
+						</div>
 					)}
 					<Button
 						type="submit"

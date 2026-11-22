@@ -23,7 +23,7 @@ type InstrumentableLibsqlClient = {
 
 const databaseConfig = resolveRuntimeDatabaseConfig();
 
-function getProxyEndpoint(proxyUrl: string, pathname: "/query" | "/batch") {
+function getProxyEndpoint(proxyUrl: string, pathname: "query" | "batch") {
 	return new URL(pathname, ensureTrailingSlash(proxyUrl)).toString();
 }
 
@@ -49,7 +49,7 @@ async function executeProxyQueryUntraced(
 		throw new Error("Remote SQLite proxy is not configured for this runtime");
 	}
 
-	const response = await fetch(getProxyEndpoint(proxyUrl, "/query"), {
+	const response = await fetch(getProxyEndpoint(proxyUrl, "query"), {
 		method: "POST",
 		headers: {
 			"content-type": "application/json",
@@ -84,7 +84,7 @@ async function executeProxyBatchUntraced(
 		throw new Error("Remote SQLite proxy is not configured for this runtime");
 	}
 
-	const response = await fetch(getProxyEndpoint(proxyUrl, "/batch"), {
+	const response = await fetch(getProxyEndpoint(proxyUrl, "batch"), {
 		method: "POST",
 		headers: {
 			"content-type": "application/json",

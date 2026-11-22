@@ -43,11 +43,10 @@ postgres_data/
 local-sqlite-database.db
 
 # Playwright
-node_modules/
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
 .playwright-mcp/
 
 .auth/

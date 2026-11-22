@@ -258,7 +258,6 @@ export class SqliteProxyDurableObject extends DurableObject {
 		if (url.pathname === "/health") {
 			return json({
 				ok: true,
-				object: SHARED_OBJECT_NAME,
 				nextCleanupAt: await this.ctx.storage.getAlarm(),
 			});
 		}
@@ -282,9 +281,24 @@ export class SqliteProxyDurableObject extends DurableObject {
 	}
 }
 
+// A path prefix selects a separate database, so several deployments can each
+// use their own: `/query` uses the shared database and `/flaky/query` uses the
+// "flaky" one. Each database is its own Durable Object.
+const NAMED_DATABASE_PATH =
+	/^\/([a-z0-9][a-z0-9-]{0,62})(\/(?:query|batch|health))$/;
+
 export default {
 	async fetch(request, env) {
-		const id = env.SQLITE_PROXY.idFromName(SHARED_OBJECT_NAME);
+		const url = new URL(request.url);
+		const match = url.pathname.match(NAMED_DATABASE_PATH);
+		const objectName = match ? match[1] : SHARED_OBJECT_NAME;
+
+		if (match) {
+			url.pathname = match[2];
+			request = new Request(url, request);
+		}
+
+		const id = env.SQLITE_PROXY.idFromName(objectName);
 		const stub = env.SQLITE_PROXY.get(id);
 		return stub.fetch(request);
 	},

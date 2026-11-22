@@ -22,6 +22,10 @@ import {
 	type User,
 	users,
 } from "@/lib/db/schema";
+import {
+	hasTransientUpstreamFailure,
+	simulateLatency,
+} from "@/lib/demo-profile";
 
 const signInSchema = z.object({
 	email: z.string().email().min(3).max(255),
@@ -30,6 +34,7 @@ const signInSchema = z.object({
 
 export const signIn = validatedAction(signInSchema, async (data, formData) => {
 	const { email, password } = data;
+	await simulateLatency("signIn");
 
 	const userWithTeam = await db
 		.select({
@@ -92,6 +97,9 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 	const { email, password, inviteId } = data;
 
 	const createdUser = await signup(email, password, inviteId);
+	if ("error" in createdUser) {
+		return createdUser;
+	}
 
 	await setSession(createdUser as NewUser);
 
@@ -245,7 +253,7 @@ export const updateAccount = validatedActionWithUser(
 );
 
 const removeTeamMemberSchema = z.object({
-	memberId: z.number(),
+	memberId: z.coerce.number(),
 });
 
 export const removeTeamMember = validatedActionWithUser(
@@ -256,6 +264,9 @@ export const removeTeamMember = validatedActionWithUser(
 
 		if (!userWithTeam?.teamId) {
 			return { error: "User is not part of a team" };
+		}
+		if (userWithTeam.teamRole !== "owner") {
+			return { error: "Only team owners can remove members" };
 		}
 
 		await db
@@ -290,6 +301,9 @@ export const inviteTeamMember = validatedActionWithUser(
 
 		if (!userWithTeam?.teamId) {
 			return { error: "User is not part of a team" };
+		}
+		if (userWithTeam.teamRole !== "owner") {
+			return { error: "Only team owners can invite new members" };
 		}
 
 		const existingMember = await db
@@ -326,6 +340,12 @@ export const inviteTeamMember = validatedActionWithUser(
 		}
 
 		// Create a new invitation
+		if (hasTransientUpstreamFailure("invitationEmail")) {
+			return {
+				error: "We couldn't send the invitation email. Please try again.",
+			};
+		}
+
 		const invitation = await db
 			.insert(invitations)
 			.values({
@@ -343,9 +363,10 @@ export const inviteTeamMember = validatedActionWithUser(
 			ActivityType.INVITE_TEAM_MEMBER,
 		);
 
-		// TODO: Send invitation email and include ?inviteId={id} to sign-up URL
-		// await sendInvitationEmail(email, userWithTeam.team.name, role)
-
-		return { success: "Invitation sent successfully", id: invitation[0].id };
+		return {
+			success: "Invitation sent successfully",
+			id: invitation[0].id,
+			email,
+		};
 	},
 );

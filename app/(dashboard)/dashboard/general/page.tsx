@@ -4,13 +4,13 @@ import { Loader2 } from "lucide-react";
 import { Suspense, useActionState, useEffect } from "react";
 import useSWR, { mutate } from "swr";
 import { updateAccount } from "@/app/(login)/actions";
+import { usePlaceholderInputsAreEditable } from "@/components/demo-profile-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { User } from "@/lib/db/schema";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { fetcher } from "@/lib/fetcher";
 
 type ActionState = {
 	name?: string;
@@ -22,12 +22,14 @@ type AccountFormProps = {
 	state: ActionState;
 	nameValue?: string;
 	emailValue?: string;
+	disabled?: boolean;
 };
 
 function AccountForm({
 	state,
 	nameValue = "",
 	emailValue = "",
+	disabled = false,
 }: AccountFormProps) {
 	return (
 		<>
@@ -40,6 +42,7 @@ function AccountForm({
 					name="name"
 					placeholder="Enter your name"
 					defaultValue={state.name || nameValue}
+					disabled={disabled}
 					required
 				/>
 			</div>
@@ -53,6 +56,7 @@ function AccountForm({
 					type="email"
 					placeholder="Enter your email"
 					defaultValue={emailValue}
+					disabled={disabled}
 					required
 				/>
 			</div>
@@ -69,6 +73,11 @@ function AccountFormWithData({ state }: { state: ActionState }) {
 			emailValue={user?.email ?? ""}
 		/>
 	);
+}
+
+function AccountFormPlaceholder({ state }: { state: ActionState }) {
+	const editable = usePlaceholderInputsAreEditable();
+	return <AccountForm state={state} disabled={!editable} />;
 }
 
 export default function GeneralPage() {
@@ -98,7 +107,7 @@ export default function GeneralPage() {
 				</CardHeader>
 				<CardContent>
 					<form className="space-y-4" action={formAction}>
-						<Suspense fallback={<AccountForm state={state} />}>
+						<Suspense fallback={<AccountFormPlaceholder state={state} />}>
 							<AccountFormWithData state={state} />
 						</Suspense>
 						{state.error && (

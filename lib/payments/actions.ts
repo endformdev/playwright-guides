@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db/drizzle";
 import { getUser } from "@/lib/db/queries";
 import { payments, teamMembers, teams } from "@/lib/db/schema";
+import { chargeWithPaymentProvider } from "@/lib/demo-profile";
 
 const paymentSchema = z.object({
 	cardNumber: z
@@ -64,6 +65,7 @@ export async function processPayment(formData: FormData) {
 
 	try {
 		const validatedData = paymentSchema.parse(data);
+		await chargeWithPaymentProvider();
 
 		await db.insert(payments).values({
 			teamId: userTeam[0].teamId,

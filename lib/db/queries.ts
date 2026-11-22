@@ -1,6 +1,11 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth/session";
+import {
+	readThroughTeamCache,
+	shouldShuffleActivityTies,
+	simulateLatency,
+} from "@/lib/demo-profile";
 import { db } from "./drizzle";
 import {
 	activityLogs,
@@ -59,6 +64,7 @@ export async function getUserWithTeam(userId: number) {
 		.select({
 			user: users,
 			teamId: teamMembers.teamId,
+			teamRole: teamMembers.role,
 		})
 		.from(users)
 		.leftJoin(teamMembers, eq(users.id, teamMembers.userId))
@@ -74,6 +80,8 @@ export async function getActivityLogs() {
 		throw new Error("User not authenticated");
 	}
 
+	await simulateLatency("activityLog");
+
 	return await db
 		.select({
 			id: activityLogs.id,
@@ -85,7 +93,10 @@ export async function getActivityLogs() {
 		.from(activityLogs)
 		.leftJoin(users, eq(activityLogs.userId, users.id))
 		.where(eq(activityLogs.userId, user.id))
-		.orderBy(desc(activityLogs.timestamp))
+		.orderBy(
+			desc(activityLogs.timestamp),
+			shouldShuffleActivityTies() ? sql`random()` : desc(activityLogs.id),
+		)
 		.limit(10);
 }
 
@@ -95,8 +106,14 @@ export async function getTeamForUser() {
 		return null;
 	}
 
+	return readThroughTeamCache(user.id, () => loadTeamForUser(user.id));
+}
+
+async function loadTeamForUser(userId: number) {
+	await simulateLatency("team");
+
 	const result = await db.query.teamMembers.findFirst({
-		where: eq(teamMembers.userId, user.id),
+		where: eq(teamMembers.userId, userId),
 		with: {
 			team: {
 				with: {
