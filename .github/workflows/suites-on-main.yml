@@ -12,12 +12,11 @@ on:
 
 permissions:
   contents: read
-  id-token: write
+  statuses: read
 
 jobs:
   suite:
-    # Skipped until the demo organizations are set up (see README).
-    if: github.repository == 'endformdev/playwright-guides' && vars.ENDFORM_FLAGSHIP_ORG_ID != ''
+    if: github.repository == 'endformdev/playwright-guides'
     strategy:
       fail-fast: false
       matrix:
@@ -36,4 +35,5 @@ jobs:
     with:
       suite: ${{ matrix.suite }}
       vercel-project: ${{ matrix.vercel-project }}
-      organization-id: ${{ vars.ENDFORM_FLAGSHIP_ORG_ID }}
+    secrets:
+      endform-api-key: ${{ secrets.ENDFORM_FLAGSHIP_API_KEY }}

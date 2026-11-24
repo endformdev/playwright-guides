@@ -11,15 +11,15 @@ on:
 
 permissions:
   contents: read
-  id-token: write
+  statuses: read
 
 jobs:
   flake-lab:
-    # Skipped until the demo organizations are set up (see README).
-    if: github.repository == 'endformdev/playwright-guides' && vars.ENDFORM_FLAKE_LAB_ORG_ID != ''
+    if: github.repository == 'endformdev/playwright-guides'
     uses: ./.github/workflows/run-suite.yml
     with:
       suite: 05-flake-lab
       vercel-project: endform-playwright-guides-flaky
-      organization-id: ${{ vars.ENDFORM_FLAKE_LAB_ORG_ID }}
       allow-failure: true
+    secrets:
+      endform-api-key: ${{ secrets.ENDFORM_FLAKE_LAB_API_KEY }}

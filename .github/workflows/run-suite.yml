@@ -1,7 +1,11 @@
 name: Run a suite on Endform
 
-# Called by the other workflows. Waits for the Vercel deployment of the
-# current commit, then runs one suite from suites/ against it on Endform.
+# Called by the other workflows. Waits for Vercel to deploy the current commit,
+# then runs one suite from suites/ against that deployment on Endform.
+#
+# The suite reports to the Endform organization its API key belongs to. The
+# repository's own Endform connection isn't used, because one repository can
+# only belong to one organization and the demo suites report to two.
 
 on:
   workflow_call:
@@ -14,18 +18,21 @@ on:
         description: Vercel project whose deployment the suite runs against
         type: string
         required: true
-      organization-id:
-        description: Endform organization to run the suite in
-        type: string
-        required: true
       allow-failure:
         description: Don't fail the workflow when tests fail
         type: boolean
         default: false
+    secrets:
+      endform-api-key:
+        description: API key of the Endform organization to report to
+        required: true
+      vercel-bypass-secret:
+        description: Vercel protection bypass for automation, needed for preview deployments
+        required: false
 
 permissions:
   contents: read
-  id-token: write # required for authentication with Endform
+  statuses: read
 
 jobs:
   run:
@@ -35,6 +42,11 @@ jobs:
     defaults:
       run:
         working-directory: suites/${{ inputs.suite }}
+    env:
+      VERCEL_PROJECT: ${{ inputs.vercel-project }}
+      BRANCH: ${{ github.head_ref || github.ref_name }}
+      SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,12 +63,47 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: .
 
+      # Vercel reports each deployment as a commit status named after the
+      # project, so this waits for that status rather than calling Vercel.
       - name: Wait for the Vercel deployment
-        uses: endformdev/actions/run-with-vercel-deployment@main
-        with:
-          project-name: ${{ inputs.vercel-project }}
-          set-url-env-var: BASE_URL
-          set-vercel-bypass-env-var: VERCEL_BYPASS_TOKEN
+        run: |
+          export STATUS_CONTEXT="Vercel – $VERCEL_PROJECT"
+          deadline=$((SECONDS + 900))
+          while :; do
+            state=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/statuses" \
+              --jq '[.[] | select(.context == env.STATUS_CONTEXT)][0].state // "not started"')
+            case "$state" in
+              success) break ;;
+              failure | error)
+                echo "::error::The $VERCEL_PROJECT deployment of $SHA failed"
+                exit 1 ;;
+            esac
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::Timed out waiting for the $VERCEL_PROJECT deployment of $SHA"
+              exit 1
+            fi
+            echo "$VERCEL_PROJECT deployment: $state"
+            sleep 10
+          done
+
+          # main is the production branch, so its deployment is served from the
+          # project's public domain. Other branches use Vercel's branch alias.
+          if [ "$BRANCH" = main ]; then
+            url="https://$VERCEL_PROJECT.vercel.app"
+          else
+            slug=$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
+            host="$VERCEL_PROJECT-git-$slug-endform"
+            if [ "${#host}" -gt 63 ]; then
+              echo "::error::Branch name $BRANCH is too long for a predictable Vercel branch URL. Use a shorter branch name."
+              exit 1
+            fi
+            url="https://$host.vercel.app"
+          fi
+          echo "Testing $url"
+          echo "BASE_URL=$url" >> "$GITHUB_ENV"
 
       - name: Run the suite on Endform
-        run: npx endform@latest test --organization-id "${{ inputs.organization-id }}"
+        run: npx endform@latest test
+        env:
+          ENDFORM_API_KEY: ${{ secrets.endform-api-key }}
+          VERCEL_BYPASS_TOKEN: ${{ secrets.vercel-bypass-secret }}

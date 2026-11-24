@@ -113,12 +113,11 @@ The workflows in [`.github/workflows`](.github/workflows) keep the public demo o
 - [`pull-requests.yml`](.github/workflows/pull-requests.yml): the scaled suite against each pull request's preview.
 - [`scenarios.yml`](.github/workflows/scenarios.yml): refreshes the scenario pull requests.
 
-The workflows stay skipped until these repository variables are set:
+Each suite reports to its demo organization with that organization's API key, not through the repository's Endform connection: a repository can only belong to one Endform organization, and the demo suites report to two. The workflows wait for Vercel's commit status for the deployment, then test the project's production domain on `main` or its branch URL elsewhere. They need these repository secrets:
 
-- `ENDFORM_FLAGSHIP_ORG_ID`: the Endform organization for the clean and slow suites.
-- `ENDFORM_FLAKE_LAB_ORG_ID`: the Endform organization for the flake lab.
-
-Both organizations need this repository connected so GitHub Actions can authenticate, and the Endform Vercel integration needs access to the three Vercel projects so the workflows can find their deployments.
+- `ENDFORM_FLAGSHIP_API_KEY`: an API key of the Flagship organization, for the clean and slow suites.
+- `ENDFORM_FLAKE_LAB_API_KEY`: an API key of the Flake Lab organization, for the flake lab.
+- `VERCEL_AUTOMATION_BYPASS_SECRET`: the clean project's Vercel protection bypass for automation, so pull request runs can open preview deployments.
 
 ## Environment variables
 

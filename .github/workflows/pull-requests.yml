@@ -10,14 +10,16 @@ on:
 
 permissions:
   contents: read
-  id-token: write
+  statuses: read
 
 jobs:
   scaled-suite:
-    # Skipped until the demo organizations are set up (see README).
-    if: github.repository == 'endformdev/playwright-guides' && vars.ENDFORM_FLAGSHIP_ORG_ID != ''
+    # Pull requests from forks don't get the secrets, so they're skipped.
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/run-suite.yml
     with:
       suite: 03-scaled-suite
       vercel-project: endform-playwright-guides
-      organization-id: ${{ vars.ENDFORM_FLAGSHIP_ORG_ID }}
+    secrets:
+      endform-api-key: ${{ secrets.ENDFORM_FLAGSHIP_API_KEY }}
+      vercel-bypass-secret: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}

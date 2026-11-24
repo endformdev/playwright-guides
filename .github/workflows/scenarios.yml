@@ -17,8 +17,7 @@ permissions:
 
 jobs:
   refresh:
-    # Skipped until the demo organizations are set up (see README).
-    if: github.repository == 'endformdev/playwright-guides' && vars.ENDFORM_FLAGSHIP_ORG_ID != ''
+    if: github.repository == 'endformdev/playwright-guides'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
