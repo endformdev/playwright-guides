@@ -2,7 +2,7 @@ import { expect, test } from "../../support/fixtures";
 
 for (const { plan, price } of [
 	{ plan: "Base", price: "$8/month" },
-	{ plan: "Plus", price: "$12/month" },
+	{ plan: "Pro", price: "$15/month" },
 ] as const) {
 	test(`checkout summarises the ${plan} plan`, async ({
 		page,
@@ -32,17 +32,17 @@ test.describe("upgrading", () => {
 		await expect(page.getByText("Billed monthly")).toBeVisible();
 	});
 
-	test("upgrading to Plus records exactly one payment", async ({
+	test("upgrading to Pro records exactly one payment", async ({
 		page,
 		checkoutPage,
 	}) => {
-		await checkoutPage.purchase("Plus");
+		await checkoutPage.purchase("Pro");
 
 		const payments = await (await page.request.get("/api/payment")).json();
 		expect(payments).toHaveLength(1);
 		expect(payments[0]).toMatchObject({
-			planName: "Plus",
-			amount: 1200,
+			planName: "Pro",
+			amount: 1500,
 			currency: "USD",
 		});
 	});
@@ -63,7 +63,7 @@ for (const { field, value, reason } of invalidFields) {
 		page,
 		checkoutPage,
 	}) => {
-		await checkoutPage.goto("Plus");
+		await checkoutPage.goto("Pro");
 		await checkoutPage.fill({ [field]: value });
 
 		await checkoutPage.submit.click();

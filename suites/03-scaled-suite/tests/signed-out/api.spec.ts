@@ -34,7 +34,7 @@ test("submitting a checkout while signed out asks you to sign in", async ({
 	page,
 	checkoutPage,
 }) => {
-	await checkoutPage.goto("Plus");
+	await checkoutPage.goto("Pro");
 	await checkoutPage.fill();
 	await checkoutPage.submit.click();
 

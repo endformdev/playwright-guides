@@ -67,7 +67,7 @@ export class CheckoutPage {
 		this.submit = page.getByRole("button", { name: /Complete Purchase/ });
 	}
 
-	async goto(plan: "Base" | "Plus") {
+	async goto(plan: "Base" | "Pro") {
 		await this.page.goto("/pricing");
 		await this.page
 			.getByRole("button", { name: "Get Started" })
@@ -83,7 +83,7 @@ export class CheckoutPage {
 		}
 	}
 
-	async purchase(plan: "Base" | "Plus") {
+	async purchase(plan: "Base" | "Pro") {
 		await this.goto(plan);
 		await this.fill();
 		await this.submit.click();

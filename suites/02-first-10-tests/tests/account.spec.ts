@@ -45,13 +45,13 @@ test("owners can invite a team member", async ({ page }) => {
 	await expect(page.getByRole("link", { name: /inviteId=/ })).toBeVisible();
 });
 
-test("users can upgrade to the Plus plan", async ({ page }) => {
+test("users can upgrade to the Pro plan", async ({ page }) => {
 	await signUp(page);
 	await expect(page.getByText("Current Plan: Free")).toBeVisible();
 
 	await page.getByRole("link", { name: "Change Plan" }).click();
 	await page.getByRole("button", { name: "Get Started" }).nth(1).click();
-	await expect(page.getByText("You are purchasing: Plus")).toBeVisible();
+	await expect(page.getByText("You are purchasing: Pro")).toBeVisible();
 
 	await page
 		.getByRole("textbox", { name: "Card Holder Name" })
@@ -71,5 +71,5 @@ test("users can upgrade to the Plus plan", async ({ page }) => {
 	await page.getByRole("button", { name: "Complete Purchase" }).click();
 
 	await expect(page).toHaveURL("/dashboard?payment=success");
-	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
+	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
 });

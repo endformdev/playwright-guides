@@ -58,10 +58,10 @@ test("signing up from a checkout link returns to that checkout", async ({
 	page,
 	authForm,
 }) => {
-	await page.goto("/sign-up?redirect=checkout&plan=Plus&amount=1200");
+	await page.goto("/sign-up?redirect=checkout&plan=Pro&amount=1500");
 
 	await authForm.signUp(uniqueEmail(), PASSWORD);
 
-	await expect(page).toHaveURL("/pricing/checkout?plan=Plus&amount=1200");
-	await expect(page.getByText("You are purchasing: Plus")).toBeVisible();
+	await expect(page).toHaveURL("/pricing/checkout?plan=Pro&amount=1500");
+	await expect(page.getByText("You are purchasing: Pro")).toBeVisible();
 });

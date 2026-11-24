@@ -19,8 +19,8 @@ test("pricing page lists both plans", async ({ page }) => {
 
 	await expect(page.getByRole("heading", { name: "Base" })).toBeVisible();
 	await expect(page.getByText("$8 per user / month")).toBeVisible();
-	await expect(page.getByRole("heading", { name: "Plus" })).toBeVisible();
-	await expect(page.getByText("$12 per user / month")).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Pro" })).toBeVisible();
+	await expect(page.getByText("$15 per user / month")).toBeVisible();
 });
 
 test("signed-out visitors are sent to sign in", async ({ page }) => {

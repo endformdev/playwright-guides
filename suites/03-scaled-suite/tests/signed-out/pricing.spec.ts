@@ -2,7 +2,7 @@ import { expect, test } from "../../support/fixtures";
 
 const plans = [
 	{ name: "Base", price: "$8", amount: 800, index: 0 },
-	{ name: "Plus", price: "$12", amount: 1200, index: 1 },
+	{ name: "Pro", price: "$15", amount: 1500, index: 1 },
 ];
 
 test.beforeEach(async ({ page }) => {
@@ -38,7 +38,7 @@ for (const plan of plans) {
 	});
 }
 
-test("Plus includes everything in Base", async ({ page }) => {
+test("Pro includes everything in Base", async ({ page }) => {
 	await expect(page.getByText("Everything in Base, and:")).toBeVisible();
 	await expect(page.getByText("24/7 Support + Slack Access")).toBeVisible();
 });
