@@ -12,6 +12,7 @@ lib/demo-profile.ts       Everything that differs between the clean, slow and fl
 suites/                   One Playwright suite per folder, each its own Endform suite
 scenarios/                Patches that are kept open as demo pull requests
 cf/                       The Cloudflare Durable Object that hosts the demo databases
+docs/                     Notes for writing the guides, such as the bugs the suites found
 ```
 
 ## Getting started
@@ -78,6 +79,8 @@ BASE_URL=http://localhost:3000 npx endform@latest test
 ```
 
 Without `BASE_URL`, each suite runs against the deployment of its profile.
+
+Writing the scaled suite turned up five real bugs in the starter app. They are written up, with the tests that caught them and the fixes, in [`docs/bugs-found-by-e2e-tests`](docs/bugs-found-by-e2e-tests).
 
 ## Scenarios
 
