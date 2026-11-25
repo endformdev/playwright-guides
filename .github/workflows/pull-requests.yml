@@ -1,7 +1,7 @@
 name: Scaled suite on pull requests
 
-# Runs the scaled suite against each pull request's preview deployment. The
-# scenario workflow also starts it on the demo branches it refreshes.
+# Runs the scaled suite against each pull request's preview deployment,
+# including the demo pull requests the scenario workflow refreshes.
 
 on:
   pull_request:

@@ -84,7 +84,7 @@ Writing the scaled suite turned up five real bugs in the starter app. They are w
 
 ## Scenarios
 
-Each patch in [`scenarios/`](scenarios) is kept open as a demo pull request on a `demo/<name>` branch. The [scenario workflow](.github/workflows/scenarios.yml) recreates each branch from `main` twice a week, so the patches never go stale, and runs the scaled suite against its preview deployment.
+Each patch in [`scenarios/`](scenarios) is kept open as a demo pull request on a `demo/<name>` branch. The [scenario workflow](.github/workflows/scenarios.yml) recreates each branch from `main` twice a week, so the patches never go stale. It pushes as the `endform-guides-scenarios` GitHub App, so each push runs the scaled suite through the normal [pull request workflow](.github/workflows/pull-requests.yml) and the result shows on the pull request.
 
 - `checkout-regression`: a refactor that breaks every checkout. The scaled suite's upgrade tests fail.
 - `pricing-flow-change`: renames the Plus plan to Pro at $15, updating the tests with it. The suite passes with changed tests.
@@ -117,6 +117,7 @@ Each suite reports to its demo organization with that organization's API key, no
 
 - `ENDFORM_FLAGSHIP_API_KEY`: an API key of the Flagship organization, for the clean and slow suites.
 - `ENDFORM_FLAKE_LAB_API_KEY`: an API key of the Flake Lab organization, for the flake lab.
+- `SCENARIOS_APP_PRIVATE_KEY` (and the `SCENARIOS_APP_ID` variable): the GitHub App the scenario workflow pushes as. It needs read and write access to contents and pull requests on this repository.
 - `VERCEL_AUTOMATION_BYPASS_SECRET`: the clean project's Vercel protection bypass for automation, so pull request runs can open preview deployments.
 
 ## Environment variables
