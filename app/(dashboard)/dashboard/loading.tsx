@@ -1,15 +1,22 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { Card } from "@/components/ui/card";
 
 export default function BikesPageSkeleton() {
 	return (
-		<section className="flex-1 p-4 lg:p-8 space-y-8">
-			<h1 className="text-lg lg:text-2xl font-medium">Bikes</h1>
-			<div className="h-9" />
-			<Card>
-				<CardHeader>
-					<CardTitle>Fleet</CardTitle>
-				</CardHeader>
-				<CardContent className="min-h-[200px]" />
+		<section className="space-y-6">
+			<PageHeader
+				title="Bikes"
+				description="Book a bike from the office pool for the morning or the afternoon."
+			>
+				<div className="h-10 w-64 rounded-full bg-stone-200/60" />
+			</PageHeader>
+			<Card className="gap-0 overflow-hidden py-0">
+				<div className="h-[57px] border-b border-stone-100" />
+				<div className="animate-pulse space-y-3 p-5">
+					{Array.from({ length: 5 }, (_, i) => (
+						<div key={i} className="h-9 rounded-lg bg-stone-100" />
+					))}
+				</div>
 			</Card>
 		</section>
 	);

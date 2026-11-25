@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 
-export function SubmitButton() {
+export function SubmitButton({ isFeatured }: { isFeatured?: boolean }) {
 	const { pending } = useFormStatus();
 	const [isHydrated, setIsHydrated] = useState(false);
 
@@ -17,8 +17,8 @@ export function SubmitButton() {
 		<Button
 			type="submit"
 			disabled={pending || !isHydrated}
-			variant="outline"
-			className="w-full rounded-full"
+			variant={isFeatured ? "default" : "outline"}
+			className="h-11 w-full rounded-full"
 		>
 			{pending ? (
 				<>

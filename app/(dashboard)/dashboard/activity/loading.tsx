@@ -1,11 +1,13 @@
+import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ActivityPageSkeleton() {
 	return (
-		<section className="flex-1 p-4 lg:p-8">
-			<h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
-				Activity Log
-			</h1>
+		<section>
+			<PageHeader
+				title="Activity Log"
+				description="Your sign-ins, bookings and account changes."
+			/>
 			<Card>
 				<CardHeader>
 					<CardTitle>Recent Activity</CardTitle>

@@ -3,6 +3,7 @@
 import { Loader2, Lock, Trash2 } from "lucide-react";
 import { useActionState } from "react";
 import { deleteAccount, updatePassword } from "@/app/(login)/actions";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,10 +35,11 @@ export default function SecurityPage() {
 	>(deleteAccount, {});
 
 	return (
-		<section className="flex-1 p-4 lg:p-8">
-			<h1 className="text-lg lg:text-2xl font-medium bold text-gray-900 mb-6">
-				Security Settings
-			</h1>
+		<section>
+			<PageHeader
+				title="Security Settings"
+				description="Change your password or delete your account."
+			/>
 			<Card className="mb-8">
 				<CardHeader>
 					<CardTitle>Password</CardTitle>
@@ -89,16 +91,14 @@ export default function SecurityPage() {
 							/>
 						</div>
 						{passwordState.error && (
-							<p className="text-red-500 text-sm">{passwordState.error}</p>
+							<p className="text-red-600 text-sm">{passwordState.error}</p>
 						)}
 						{passwordState.success && (
-							<p className="text-green-500 text-sm">{passwordState.success}</p>
+							<p className="text-brand-700 font-medium text-sm">
+								{passwordState.success}
+							</p>
 						)}
-						<Button
-							type="submit"
-							className="bg-orange-500 hover:bg-orange-600 text-white"
-							disabled={isPasswordPending}
-						>
+						<Button type="submit" disabled={isPasswordPending}>
 							{isPasswordPending ? (
 								<>
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -115,13 +115,13 @@ export default function SecurityPage() {
 				</CardContent>
 			</Card>
 
-			<Card>
+			<Card className="border-red-200">
 				<CardHeader>
-					<CardTitle>Delete Account</CardTitle>
+					<CardTitle className="text-red-700">Delete Account</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<p className="text-sm text-gray-500 mb-4">
-						Account deletion is non-reversable. Please proceed with caution.
+					<p className="text-sm text-stone-500 mb-4">
+						Deleting your account can't be undone, and your bookings go with it.
 					</p>
 					<form action={deleteAction} className="space-y-4">
 						<div>
@@ -139,12 +139,11 @@ export default function SecurityPage() {
 							/>
 						</div>
 						{deleteState.error && (
-							<p className="text-red-500 text-sm">{deleteState.error}</p>
+							<p className="text-red-600 text-sm">{deleteState.error}</p>
 						)}
 						<Button
 							type="submit"
 							variant="destructive"
-							className="bg-red-600 hover:bg-red-700"
 							disabled={isDeletePending}
 						>
 							{isDeletePending ? (

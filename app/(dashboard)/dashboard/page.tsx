@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { PageHeader } from "@/components/page-header";
 import {
 	getApiKey,
 	getBookingsForDay,
@@ -39,15 +40,19 @@ export default async function BikesPage({
 	]);
 
 	return (
-		<section className="flex-1 p-4 lg:p-8 space-y-8">
-			<h1 className="text-lg lg:text-2xl font-medium">Bikes</h1>
-			<DayPicker date={date} today={today()} />
+		<section className="space-y-6">
+			<PageHeader
+				title="Bikes"
+				description="Book a bike from the office pool for the morning or the afternoon."
+			>
+				<DayPicker date={date} today={today()} />
+			</PageHeader>
 			<BookingGrid
 				key={date}
 				bikes={fleet}
 				bookings={dayBookings}
 				date={date}
-				isPast={date < today()}
+				today={today()}
 				currentUserId={user.id}
 				isOwner={isOwner}
 			/>

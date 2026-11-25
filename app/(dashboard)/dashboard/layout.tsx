@@ -1,10 +1,17 @@
 "use client";
 
-import { Activity, Bike, Menu, Settings, Shield, Users } from "lucide-react";
+import { Activity, Bike, Settings, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const NAV_ITEMS = [
+	{ href: "/dashboard", icon: Bike, label: "Bikes" },
+	{ href: "/dashboard/team", icon: Users, label: "Team" },
+	{ href: "/dashboard/general", icon: Settings, label: "General" },
+	{ href: "/dashboard/activity", icon: Activity, label: "Activity" },
+	{ href: "/dashboard/security", icon: Shield, label: "Security" },
+];
 
 export default function DashboardLayout({
 	children,
@@ -12,63 +19,43 @@ export default function DashboardLayout({
 	children: React.ReactNode;
 }) {
 	const pathname = usePathname();
-	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-	const navItems = [
-		{ href: "/dashboard", icon: Bike, label: "Bikes" },
-		{ href: "/dashboard/team", icon: Users, label: "Team" },
-		{ href: "/dashboard/general", icon: Settings, label: "General" },
-		{ href: "/dashboard/activity", icon: Activity, label: "Activity" },
-		{ href: "/dashboard/security", icon: Shield, label: "Security" },
-	];
 
 	return (
-		<div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
-			{/* Mobile header */}
-			<div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4">
-				<div className="flex items-center">
-					<span className="font-medium">BikeBook</span>
-				</div>
-				<Button
-					className="-mr-3"
-					variant="ghost"
-					onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-				>
-					<Menu className="h-6 w-6" />
-					<span className="sr-only">Toggle sidebar</span>
-				</Button>
-			</div>
+		<div className="mx-auto flex w-full max-w-6xl flex-1 flex-col lg:flex-row lg:gap-8 lg:px-8 lg:py-8">
+			{/* One nav: a scrolling tab bar on small screens, a sidebar on large. */}
+			<nav
+				aria-label="Dashboard"
+				className="flex shrink-0 gap-1 overflow-x-auto border-b border-stone-200 bg-white px-4 py-2 lg:sticky lg:top-24 lg:w-52 lg:flex-col lg:self-start lg:border-0 lg:bg-transparent lg:p-0"
+			>
+				{NAV_ITEMS.map((item) => {
+					const isActive = pathname === item.href;
+					return (
+						<Link
+							key={item.href}
+							href={item.href}
+							aria-current={isActive ? "page" : undefined}
+							className={cn(
+								"flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+								isActive
+									? "bg-brand-50 text-brand-800 lg:bg-white lg:shadow-sm lg:ring-1 lg:ring-stone-200"
+									: "text-stone-600 hover:bg-stone-100 hover:text-stone-900",
+							)}
+						>
+							<item.icon
+								className={cn(
+									"size-4",
+									isActive ? "text-brand-700" : "text-stone-400",
+								)}
+							/>
+							{item.label}
+						</Link>
+					);
+				})}
+			</nav>
 
-			<div className="flex flex-1 overflow-hidden h-full">
-				{/* Sidebar */}
-				<aside
-					className={`w-64 bg-white lg:bg-gray-50 border-r border-gray-200 lg:block ${
-						isSidebarOpen ? "block" : "hidden"
-					} lg:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-						isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-					}`}
-				>
-					<nav className="h-full overflow-y-auto p-4">
-						{navItems.map((item) => (
-							<Link key={item.href} href={item.href}>
-								<Button
-									variant={pathname === item.href ? "secondary" : "ghost"}
-									className={`shadow-none my-1 w-full justify-start ${
-										pathname === item.href ? "bg-gray-100" : ""
-									}`}
-									onClick={() => setIsSidebarOpen(false)}
-								>
-									<item.icon className="h-4 w-4" />
-									{item.label}
-								</Button>
-							</Link>
-						))}
-					</nav>
-				</aside>
-
-				{/* Main content */}
-				<main className="flex-1 overflow-y-auto p-0 lg:p-4">{children}</main>
-			</div>
+			<main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-0 lg:py-0">
+				{children}
+			</main>
 		</div>
 	);
 }
