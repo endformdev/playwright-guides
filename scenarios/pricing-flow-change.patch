@@ -1,9 +1,9 @@
 diff --git a/app/(dashboard)/pricing/page.tsx b/app/(dashboard)/pricing/page.tsx
-index 3814537..7342e07 100644
+index 9cd8c1d..d96f166 100644
 --- a/app/(dashboard)/pricing/page.tsx
 +++ b/app/(dashboard)/pricing/page.tsx
-@@ -15,8 +15,8 @@ const PLANS = [
- 		],
+@@ -11,8 +11,8 @@ const PLANS = [
+ 		features: ["Unlimited bookings", "Unlimited team members", "Email support"],
  	},
  	{
 -		name: "Plus",
@@ -13,95 +13,185 @@ index 3814537..7342e07 100644
  		interval: "month",
  		trialDays: 7,
  		features: [
-diff --git a/suites/02-first-10-tests/tests/account.spec.ts b/suites/02-first-10-tests/tests/account.spec.ts
-index 5014869..f35aa76 100644
---- a/suites/02-first-10-tests/tests/account.spec.ts
-+++ b/suites/02-first-10-tests/tests/account.spec.ts
-@@ -45,13 +45,13 @@ test("owners can invite a team member", async ({ page }) => {
- 	await expect(page.getByRole("link", { name: /inviteId=/ })).toBeVisible();
- });
+diff --git a/suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-plus-plan/choose-the-plus-plan-and-complete-checkout-with-a-valid-card.ts b/suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-pro-plan/choose-the-pro-plan-and-complete-checkout-with-a-valid-card.ts
+similarity index 73%
+rename from suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-plus-plan/choose-the-plus-plan-and-complete-checkout-with-a-valid-card.ts
+rename to suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-pro-plan/choose-the-pro-plan-and-complete-checkout-with-a-valid-card.ts
+index 5c9b912..fb25b09 100644
+--- a/suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-plus-plan/choose-the-plus-plan-and-complete-checkout-with-a-valid-card.ts
++++ b/suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-pro-plan/choose-the-pro-plan-and-complete-checkout-with-a-valid-card.ts
+@@ -1,5 +1,5 @@
+-// intent: "choose the Plus plan and complete checkout with a valid card"
+-// test: "users can upgrade from Free to the Plus plan"
++// intent: "choose the Pro plan and complete checkout with a valid card"
++// test: "users can upgrade from Free to the Pro plan"
+ import type { StepContext } from "playwright-intent";
  
--test("users can upgrade to the Plus plan", async ({ page }) => {
-+test("users can upgrade to the Pro plan", async ({ page }) => {
- 	await signUp(page);
- 	await expect(page.getByText("Current Plan: Free")).toBeVisible();
- 
+ export default async function ({
+@@ -12,12 +12,10 @@ export default async function ({
  	await page.getByRole("link", { name: "Change Plan" }).click();
+ 	await expect(page).toHaveURL(/\/pricing$/);
  	await page.getByRole("button", { name: "Get Started" }).nth(1).click();
--	await expect(page.getByText("You are purchasing: Plus")).toBeVisible();
-+	await expect(page.getByText("You are purchasing: Pro")).toBeVisible();
- 
+-	await expect(
+-		page.getByRole("heading", { name: "Complete Your Purchase" }),
+-	).toBeVisible();
++	await expect(page).toHaveURL(/\/pricing\/checkout\?plan=Pro/);
  	await page
  		.getByRole("textbox", { name: "Card Holder Name" })
-@@ -71,5 +71,5 @@ test("users can upgrade to the Plus plan", async ({ page }) => {
- 	await page.getByRole("button", { name: "Complete Purchase" }).click();
+-		.fill("Ada Lovelace");
++		.fill("Test User");
+ 	await page
+ 		.getByRole("textbox", { name: "Card Number (8 digits only)" })
+ 		.fill("12345678");
+@@ -30,7 +28,9 @@ export default async function ({
+ 	await page.getByRole("textbox", { name: "State" }).fill("NY");
+ 	await page.getByRole("textbox", { name: "ZIP Code" }).fill("10001");
+ 	await page.getByRole("textbox", { name: "Country" }).fill("United States");
+-	await page.getByRole("button", { name: /Complete Purchase/ }).click();
++	await page
++		.getByRole("button", { name: "Complete Purchase - $15/month" })
++		.click();
+ 	await expect(page).toHaveURL(/\/dashboard\/team\?payment=success$/);
+-	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
++	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
+ }
+diff --git a/suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-plus-plan/sign-up-with-email-email-and-password-password.ts b/suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-pro-plan/sign-up-with-email-email-and-password-password.ts
+similarity index 77%
+rename from suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-plus-plan/sign-up-with-email-email-and-password-password.ts
+rename to suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-pro-plan/sign-up-with-email-email-and-password-password.ts
+index 4c66a78..d24d1c9 100644
+--- a/suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-plus-plan/sign-up-with-email-email-and-password-password.ts
++++ b/suites/02-first-10-tests/.intent/tests/account.spec.ts/users-can-upgrade-from-free-to-the-pro-plan/sign-up-with-email-email-and-password-password.ts
+@@ -1,5 +1,5 @@
+ // intent: "sign up with email {email} and password {password}"
+-// test: "users can upgrade from Free to the Plus plan"
++// test: "users can upgrade from Free to the Pro plan"
+ import type { StepContext } from "playwright-intent";
  
- 	await expect(page).toHaveURL("/dashboard?payment=success");
+ export default async function ({
+@@ -12,5 +12,5 @@ export default async function ({
+ 	await page.getByRole("textbox", { name: "Email" }).fill(vars.email);
+ 	await page.getByRole("textbox", { name: "Password" }).fill(vars.password);
+ 	await page.getByRole("button", { name: "Sign up" }).click();
+-	await expect(page).toHaveURL("/dashboard");
++	await expect(page.getByRole("link", { name: "Team" })).toBeVisible();
+ }
+diff --git a/suites/02-first-10-tests/tests/account.spec.ts b/suites/02-first-10-tests/tests/account.spec.ts
+index 8608ab4..e8912dc 100644
+--- a/suites/02-first-10-tests/tests/account.spec.ts
++++ b/suites/02-first-10-tests/tests/account.spec.ts
+@@ -37,7 +37,7 @@ test("an invited teammate can book from the team's bikes", async ({
+ 	await expect(page.getByRole("status")).toContainText("Booked City 1");
+ });
+ 
+-test("users can upgrade from Free to the Plus plan", async ({ page, ai }) => {
++test("users can upgrade from Free to the Pro plan", async ({ page, ai }) => {
+ 	await page.goto("/sign-up");
+ 	await ai.do("sign up with email {email} and password {password}", {
+ 		email: uniqueEmail(),
+@@ -46,8 +46,8 @@ test("users can upgrade from Free to the Plus plan", async ({ page, ai }) => {
+ 	await page.getByRole("link", { name: "Team" }).click();
+ 	await expect(page.getByText("Current Plan: Free")).toBeVisible();
+ 
+-	await ai.do("choose the Plus plan and complete checkout with a valid card");
++	await ai.do("choose the Pro plan and complete checkout with a valid card");
+ 
+ 	await expect(page).toHaveURL("/dashboard/team?payment=success");
 -	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
 +	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
  });
-diff --git a/suites/02-first-10-tests/tests/public.spec.ts b/suites/02-first-10-tests/tests/public.spec.ts
-index a961326..8355d74 100644
---- a/suites/02-first-10-tests/tests/public.spec.ts
-+++ b/suites/02-first-10-tests/tests/public.spec.ts
-@@ -19,8 +19,8 @@ test("pricing page lists both plans", async ({ page }) => {
+diff --git a/suites/03-scaled-suite/.intent/tests/signed-in/checkout.spec.ts/upgrading--upgrading-to-plus-records-exactly-one-payment/choose-the-plus-plan-and-complete-checkout-with-a-valid-card.ts b/suites/03-scaled-suite/.intent/tests/signed-in/checkout.spec.ts/upgrading--upgrading-to-pro-records-exactly-one-payment/choose-the-pro-plan-and-complete-checkout-with-a-valid-card.ts
+similarity index 82%
+rename from suites/03-scaled-suite/.intent/tests/signed-in/checkout.spec.ts/upgrading--upgrading-to-plus-records-exactly-one-payment/choose-the-plus-plan-and-complete-checkout-with-a-valid-card.ts
+rename to suites/03-scaled-suite/.intent/tests/signed-in/checkout.spec.ts/upgrading--upgrading-to-pro-records-exactly-one-payment/choose-the-pro-plan-and-complete-checkout-with-a-valid-card.ts
+index 31ecd89..25bcaa2 100644
+--- a/suites/03-scaled-suite/.intent/tests/signed-in/checkout.spec.ts/upgrading--upgrading-to-plus-records-exactly-one-payment/choose-the-plus-plan-and-complete-checkout-with-a-valid-card.ts
++++ b/suites/03-scaled-suite/.intent/tests/signed-in/checkout.spec.ts/upgrading--upgrading-to-pro-records-exactly-one-payment/choose-the-pro-plan-and-complete-checkout-with-a-valid-card.ts
+@@ -1,5 +1,5 @@
+-// intent: "choose the Plus plan and complete checkout with a valid card"
+-// test: "upgrading > upgrading to Plus records exactly one payment"
++// intent: "choose the Pro plan and complete checkout with a valid card"
++// test: "upgrading > upgrading to Pro records exactly one payment"
+ import type { StepContext } from "playwright-intent";
  
- 	await expect(page.getByRole("heading", { name: "Base" })).toBeVisible();
- 	await expect(page.getByText("$8 per user / month")).toBeVisible();
--	await expect(page.getByRole("heading", { name: "Plus" })).toBeVisible();
--	await expect(page.getByText("$12 per user / month")).toBeVisible();
-+	await expect(page.getByRole("heading", { name: "Pro" })).toBeVisible();
-+	await expect(page.getByText("$15 per user / month")).toBeVisible();
- });
+ export default async function ({
+@@ -26,6 +26,8 @@ export default async function ({
+ 	await page.getByRole("textbox", { name: "State" }).fill("Greater London");
+ 	await page.getByRole("textbox", { name: "ZIP Code" }).fill("N1 9GU");
+ 	await page.getByRole("textbox", { name: "Country" }).fill("United Kingdom");
+-	await page.getByRole("button", { name: /Complete Purchase/ }).click();
++	await page
++		.getByRole("button", { name: "Complete Purchase - $15/month" })
++		.click();
+ 	await expect(page).toHaveURL("/dashboard/team?payment=success");
+ }
+diff --git a/suites/03-scaled-suite/.intent/tests/signed-out/api.spec.ts/submitting-a-checkout-while-signed-out-asks-you-to-sign-in/choose-the-plus-plan-and-submit-checkout-with-a-valid-card.ts b/suites/03-scaled-suite/.intent/tests/signed-out/api.spec.ts/submitting-a-checkout-while-signed-out-asks-you-to-sign-in/choose-the-pro-plan-and-submit-checkout-with-a-valid-card.ts
+similarity index 84%
+rename from suites/03-scaled-suite/.intent/tests/signed-out/api.spec.ts/submitting-a-checkout-while-signed-out-asks-you-to-sign-in/choose-the-plus-plan-and-submit-checkout-with-a-valid-card.ts
+rename to suites/03-scaled-suite/.intent/tests/signed-out/api.spec.ts/submitting-a-checkout-while-signed-out-asks-you-to-sign-in/choose-the-pro-plan-and-submit-checkout-with-a-valid-card.ts
+index 15ef484..34fc1fd 100644
+--- a/suites/03-scaled-suite/.intent/tests/signed-out/api.spec.ts/submitting-a-checkout-while-signed-out-asks-you-to-sign-in/choose-the-plus-plan-and-submit-checkout-with-a-valid-card.ts
++++ b/suites/03-scaled-suite/.intent/tests/signed-out/api.spec.ts/submitting-a-checkout-while-signed-out-asks-you-to-sign-in/choose-the-pro-plan-and-submit-checkout-with-a-valid-card.ts
+@@ -1,4 +1,4 @@
+-// intent: "choose the Plus plan and submit checkout with a valid card"
++// intent: "choose the Pro plan and submit checkout with a valid card"
+ // test: "submitting a checkout while signed out asks you to sign in"
+ import type { StepContext } from "playwright-intent";
  
- test("signed-out visitors are sent to sign in", async ({ page }) => {
-diff --git a/suites/03-scaled-suite/support/pages.ts b/suites/03-scaled-suite/support/pages.ts
-index d575a4d..48441e1 100644
---- a/suites/03-scaled-suite/support/pages.ts
-+++ b/suites/03-scaled-suite/support/pages.ts
-@@ -67,7 +67,7 @@ export class CheckoutPage {
- 		this.submit = page.getByRole("button", { name: /Complete Purchase/ });
- 	}
- 
--	async goto(plan: "Base" | "Plus") {
-+	async goto(plan: "Base" | "Pro") {
- 		await this.page.goto("/pricing");
- 		await this.page
- 			.getByRole("button", { name: "Get Started" })
-@@ -83,7 +83,7 @@ export class CheckoutPage {
- 		}
- 	}
- 
--	async purchase(plan: "Base" | "Plus") {
-+	async purchase(plan: "Base" | "Pro") {
- 		await this.goto(plan);
- 		await this.fill();
- 		await this.submit.click();
+@@ -10,6 +10,7 @@ export default async function ({
+ 	vars,
+ }: StepContext): Promise<void> {
+ 	await page.getByRole("button", { name: "Get Started" }).nth(1).click();
++	await expect(page).toHaveURL(/\/pricing\/checkout/);
+ 	await expect(
+ 		page.getByRole("heading", { name: "Complete Your Purchase" }),
+ 	).toBeVisible();
+@@ -28,6 +29,8 @@ export default async function ({
+ 	await page.getByRole("textbox", { name: "State" }).fill("NY");
+ 	await page.getByRole("textbox", { name: "ZIP Code" }).fill("10001");
+ 	await page.getByRole("textbox", { name: "Country" }).fill("United States");
+-	await page.getByRole("button", { name: /Complete Purchase/ }).click();
++	await page
++		.getByRole("button", { name: "Complete Purchase - $15/month" })
++		.click();
+ 	await expect(page).toHaveURL(/\/sign-in/);
+ }
 diff --git a/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts b/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts
-index 0b51f4d..308b408 100644
+index f6466b0..e07f679 100644
 --- a/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts
 +++ b/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts
-@@ -2,7 +2,7 @@ import { expect, test } from "../../support/fixtures";
+@@ -24,7 +24,7 @@ const PAYMENT_LABELS: Record<keyof typeof VALID_PAYMENT, string> = {
+ 	country: "Country",
+ };
+ 
+-async function openCheckout(page: Page, plan: "Base" | "Plus") {
++async function openCheckout(page: Page, plan: "Base" | "Pro") {
+ 	await page.goto("/pricing");
+ 	await page
+ 		.getByRole("button", { name: "Get Started" })
+@@ -47,7 +47,7 @@ async function fillCheckout(
  
  for (const { plan, price } of [
  	{ plan: "Base", price: "$8/month" },
 -	{ plan: "Plus", price: "$12/month" },
 +	{ plan: "Pro", price: "$15/month" },
  ] as const) {
- 	test(`checkout summarises the ${plan} plan`, async ({
- 		page,
-@@ -32,17 +32,17 @@ test.describe("upgrading", () => {
+ 	test(`checkout summarises the ${plan} plan`, async ({ page }) => {
+ 		await openCheckout(page, plan);
+@@ -76,19 +76,16 @@ test.describe("upgrading", () => {
  		await expect(page.getByText("Billed monthly")).toBeVisible();
  	});
  
 -	test("upgrading to Plus records exactly one payment", async ({
-+	test("upgrading to Pro records exactly one payment", async ({
- 		page,
- 		checkoutPage,
- 	}) => {
--		await checkoutPage.purchase("Plus");
-+		await checkoutPage.purchase("Pro");
+-		page,
+-		ai,
+-	}) => {
++	test("upgrading to Pro records exactly one payment", async ({ page, ai }) => {
+ 		await page.goto("/pricing");
+-		await ai.do("choose the Plus plan and complete checkout with a valid card");
++		await ai.do("choose the Pro plan and complete checkout with a valid card");
  
+ 		await expect(page).toHaveURL("/dashboard/team?payment=success");
  		const payments = await (await page.request.get("/api/payment")).json();
  		expect(payments).toHaveLength(1);
  		expect(payments[0]).toMatchObject({
@@ -112,30 +202,30 @@ index 0b51f4d..308b408 100644
  			currency: "USD",
  		});
  	});
-@@ -63,7 +63,7 @@ for (const { field, value, reason } of invalidFields) {
- 		page,
- 		checkoutPage,
- 	}) => {
--		await checkoutPage.goto("Plus");
-+		await checkoutPage.goto("Pro");
- 		await checkoutPage.fill({ [field]: value });
+@@ -106,7 +103,7 @@ const invalidFields = [
  
- 		await checkoutPage.submit.click();
+ for (const { field, value, reason } of invalidFields) {
+ 	test(`a ${field} that is ${reason} can't be submitted`, async ({ page }) => {
+-		await openCheckout(page, "Plus");
++		await openCheckout(page, "Pro");
+ 		await fillCheckout(page, { [field]: value });
+ 
+ 		await page.getByRole("button", { name: /Complete Purchase/ }).click();
 diff --git a/suites/03-scaled-suite/tests/signed-out/api.spec.ts b/suites/03-scaled-suite/tests/signed-out/api.spec.ts
-index 7aaaba1..0504375 100644
+index cc3a049..93a4891 100644
 --- a/suites/03-scaled-suite/tests/signed-out/api.spec.ts
 +++ b/suites/03-scaled-suite/tests/signed-out/api.spec.ts
-@@ -34,7 +34,7 @@ test("submitting a checkout while signed out asks you to sign in", async ({
- 	page,
- 	checkoutPage,
+@@ -35,7 +35,7 @@ test("submitting a checkout while signed out asks you to sign in", async ({
+ 	ai,
  }) => {
--	await checkoutPage.goto("Plus");
-+	await checkoutPage.goto("Pro");
- 	await checkoutPage.fill();
- 	await checkoutPage.submit.click();
+ 	await page.goto("/pricing");
+-	await ai.do("choose the Plus plan and submit checkout with a valid card");
++	await ai.do("choose the Pro plan and submit checkout with a valid card");
  
+ 	await expect(page).toHaveURL(/\/sign-in/);
+ });
 diff --git a/suites/03-scaled-suite/tests/signed-out/pricing.spec.ts b/suites/03-scaled-suite/tests/signed-out/pricing.spec.ts
-index 7444165..d12dc17 100644
+index b885def..529e4ae 100644
 --- a/suites/03-scaled-suite/tests/signed-out/pricing.spec.ts
 +++ b/suites/03-scaled-suite/tests/signed-out/pricing.spec.ts
 @@ -2,7 +2,7 @@ import { expect, test } from "../../support/fixtures";
@@ -154,20 +244,23 @@ index 7444165..d12dc17 100644
 -test("Plus includes everything in Base", async ({ page }) => {
 +test("Pro includes everything in Base", async ({ page }) => {
  	await expect(page.getByText("Everything in Base, and:")).toBeVisible();
- 	await expect(page.getByText("24/7 Support + Slack Access")).toBeVisible();
+ 	await expect(page.getByText("24/7 support + Slack access")).toBeVisible();
  });
 diff --git a/suites/03-scaled-suite/tests/signed-out/sign-up.spec.ts b/suites/03-scaled-suite/tests/signed-out/sign-up.spec.ts
-index 59daf56..d6fb164 100644
+index 660d1a2..d870573 100644
 --- a/suites/03-scaled-suite/tests/signed-out/sign-up.spec.ts
 +++ b/suites/03-scaled-suite/tests/signed-out/sign-up.spec.ts
-@@ -58,10 +58,10 @@ test("signing up from a checkout link returns to that checkout", async ({
+@@ -81,13 +81,13 @@ test("signing up from a checkout link returns to that checkout", async ({
  	page,
- 	authForm,
+ 	ai,
  }) => {
 -	await page.goto("/sign-up?redirect=checkout&plan=Plus&amount=1200");
 +	await page.goto("/sign-up?redirect=checkout&plan=Pro&amount=1500");
  
- 	await authForm.signUp(uniqueEmail(), PASSWORD);
+ 	await ai.do("sign up with email {email} and password {password}", {
+ 		email: uniqueEmail(),
+ 		password: PASSWORD,
+ 	});
  
 -	await expect(page).toHaveURL("/pricing/checkout?plan=Plus&amount=1200");
 -	await expect(page.getByText("You are purchasing: Plus")).toBeVisible();
@@ -175,26 +268,20 @@ index 59daf56..d6fb164 100644
 +	await expect(page.getByText("You are purchasing: Pro")).toBeVisible();
  });
 diff --git a/suites/04a-speed-unoptimized/tests/billing.spec.ts b/suites/04a-speed-unoptimized/tests/billing.spec.ts
-index 1ce59da..55d07e8 100644
+index fad2e34..ed92543 100644
 --- a/suites/04a-speed-unoptimized/tests/billing.spec.ts
 +++ b/suites/04a-speed-unoptimized/tests/billing.spec.ts
-@@ -12,39 +12,39 @@ test("upgrading to Base starts a subscription", async ({ page }) => {
+@@ -12,20 +12,20 @@ test("upgrading to Base starts a subscription", async ({ page }) => {
  	await expect(page.getByText("Billed monthly")).toBeVisible();
  });
  
--test("upgrading to Plus starts a subscription", async ({ page }) => {
+-test("upgrading to Plus records exactly one payment", async ({ page }) => {
 -	await purchase(page, "Plus");
-+test("upgrading to Pro starts a subscription", async ({ page }) => {
++test("upgrading to Pro records exactly one payment", async ({ page }) => {
 +	await purchase(page, "Pro");
  
 -	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
 +	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
- });
- 
- test("an upgrade records exactly one payment", async ({ page }) => {
--	await purchase(page, "Plus");
-+	await purchase(page, "Pro");
- 
  	const payments = await (await page.request.get("/api/payment")).json();
  	expect(payments).toHaveLength(1);
 -	expect(payments[0]).toMatchObject({ planName: "Plus", amount: 1200 });
@@ -211,6 +298,8 @@ index 1ce59da..55d07e8 100644
 +	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
  	const payments = await (await page.request.get("/api/payment")).json();
  	expect(payments).toHaveLength(2);
+ });
+@@ -41,15 +41,15 @@ test("pricing lists both plans", async ({ page }) => {
  });
  
  test("checkout summarises the chosen plan", async ({ page }) => {
@@ -230,7 +319,7 @@ index 1ce59da..55d07e8 100644
  
  	await page.getByRole("button", { name: /Complete Purchase/ }).click();
 diff --git a/suites/04a-speed-unoptimized/tests/helpers.ts b/suites/04a-speed-unoptimized/tests/helpers.ts
-index cb7c013..bf44ae2 100644
+index e0125ef..5ef71b0 100644
 --- a/suites/04a-speed-unoptimized/tests/helpers.ts
 +++ b/suites/04a-speed-unoptimized/tests/helpers.ts
 @@ -70,7 +70,7 @@ export async function invite(page: Page, email: string) {
@@ -243,7 +332,7 @@ index cb7c013..bf44ae2 100644
  	await page
  		.getByRole("button", { name: "Get Started" })
 diff --git a/suites/04b-speed-optimized/support/actions.ts b/suites/04b-speed-optimized/support/actions.ts
-index 14a7a09..d1f9e22 100644
+index 1408f8e..792dab8 100644
 --- a/suites/04b-speed-optimized/support/actions.ts
 +++ b/suites/04b-speed-optimized/support/actions.ts
 @@ -49,7 +49,7 @@ export async function invite(page: Page, email: string) {
@@ -256,11 +345,11 @@ index 14a7a09..d1f9e22 100644
  	await page
  		.getByRole("button", { name: "Get Started" })
 diff --git a/suites/04b-speed-optimized/tests/billing.spec.ts b/suites/04b-speed-optimized/tests/billing.spec.ts
-index 1fb98e2..f7c0635 100644
+index 2fc2723..44d7032 100644
 --- a/suites/04b-speed-optimized/tests/billing.spec.ts
 +++ b/suites/04b-speed-optimized/tests/billing.spec.ts
-@@ -2,15 +2,15 @@ import { fillCheckout, purchase } from "../support/actions";
- import { expect, test } from "../support/fixtures";
+@@ -12,15 +12,15 @@ test("pricing lists both plans", async ({ page }) => {
+ });
  
  test("checkout summarises the chosen plan", async ({ page }) => {
 -	await page.goto("/pricing/checkout?plan=Plus&amount=1200");
@@ -278,23 +367,17 @@ index 1fb98e2..f7c0635 100644
  	await fillCheckout(page, "1234");
  
  	await page.getByRole("button", { name: /Complete Purchase/ }).click();
-@@ -33,27 +33,25 @@ test.describe("upgrading", { tag: "@payments" }, () => {
+@@ -43,22 +43,20 @@ test.describe("upgrading", { tag: "@payments" }, () => {
  		await expect(page.getByText("Billed monthly")).toBeVisible();
  	});
  
--	test("upgrading to Plus starts a subscription", async ({ page }) => {
+-	test("upgrading to Plus records exactly one payment", async ({ page }) => {
 -		await purchase(page, "Plus");
-+	test("upgrading to Pro starts a subscription", async ({ page }) => {
++	test("upgrading to Pro records exactly one payment", async ({ page }) => {
 +		await purchase(page, "Pro");
  
 -		await expect(page.getByText("Current Plan: Plus")).toBeVisible();
 +		await expect(page.getByText("Current Plan: Pro")).toBeVisible();
- 	});
- 
- 	test("an upgrade records exactly one payment", async ({ page }) => {
--		await purchase(page, "Plus");
-+		await purchase(page, "Pro");
- 
  		const payments = await (await page.request.get("/api/payment")).json();
  		expect(payments).toHaveLength(1);
 -		expect(payments[0]).toMatchObject({ planName: "Plus", amount: 1200 });
@@ -315,7 +398,7 @@ index 1fb98e2..f7c0635 100644
  		expect(payments).toHaveLength(2);
  	});
 diff --git a/suites/05-flake-lab/tests/billing.spec.ts b/suites/05-flake-lab/tests/billing.spec.ts
-index fb75f8c..2ab3c5e 100644
+index 43c4305..5496b82 100644
 --- a/suites/05-flake-lab/tests/billing.spec.ts
 +++ b/suites/05-flake-lab/tests/billing.spec.ts
 @@ -16,14 +16,14 @@ async function fillCheckout(page: import("@playwright/test").Page) {
@@ -335,23 +418,16 @@ index fb75f8c..2ab3c5e 100644
  		).toBeVisible();
  	});
  });
-@@ -37,16 +37,16 @@ test("an upgrade shows the new plan on the team page", async ({
- 		await expect(page.getByText("Current Plan: Free")).toBeVisible();
- 	});
+diff --git a/suites/05-flake-lab/tests/visitors.spec.ts b/suites/05-flake-lab/tests/visitors.spec.ts
+index 98094d7..ff402be 100644
+--- a/suites/05-flake-lab/tests/visitors.spec.ts
++++ b/suites/05-flake-lab/tests/visitors.spec.ts
+@@ -7,7 +7,7 @@ test("a visitor compares the plans", async ({ page }) => {
  
--	await test.step("Buy the Plus plan", async () => {
-+	await test.step("Buy the Pro plan", async () => {
- 		await page.getByRole("link", { name: "Change Plan" }).click();
- 		await page.getByRole("button", { name: "Get Started" }).nth(1).click();
- 		await fillCheckout(page);
- 		await page.getByRole("button", { name: /Complete Purchase/ }).click();
- 	});
- 
--	await test.step("See the team on the Plus plan", async () => {
-+	await test.step("See the team on the Pro plan", async () => {
- 		await expect(page).toHaveURL("/dashboard?payment=success");
--		await expect(page.getByText("Current Plan: Plus")).toBeVisible();
-+		await expect(page.getByText("Current Plan: Pro")).toBeVisible();
+ 	await test.step("See both plans with their monthly price", async () => {
+ 		await expect(page.getByText("$8 per user / month")).toBeVisible();
+-		await expect(page.getByText("$12 per user / month")).toBeVisible();
++		await expect(page.getByText("$15 per user / month")).toBeVisible();
  	});
  });
  
