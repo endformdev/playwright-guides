@@ -5,6 +5,7 @@ import { type Ref, Suspense, useActionState, useEffect, useRef } from "react";
 import useSWR, { mutate } from "swr";
 import { updateAccount } from "@/app/(login)/actions";
 import { useFormResyncsOnEveryFetch } from "@/components/demo-profile-provider";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -111,10 +112,11 @@ export default function GeneralPage() {
 	}, [state?.success]);
 
 	return (
-		<section className="flex-1 p-4 lg:p-8">
-			<h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
-				General Settings
-			</h1>
+		<section>
+			<PageHeader
+				title="General Settings"
+				description="How you show up to the rest of the office."
+			/>
 
 			<Card>
 				<CardHeader>
@@ -126,16 +128,14 @@ export default function GeneralPage() {
 							<AccountFormWithData state={state} />
 						</Suspense>
 						{state.error && (
-							<p className="text-red-500 text-sm">{state.error}</p>
+							<p className="text-red-600 text-sm">{state.error}</p>
 						)}
 						{state.success && (
-							<p className="text-green-500 text-sm">{state.success}</p>
+							<p className="text-brand-700 font-medium text-sm">
+								{state.success}
+							</p>
 						)}
-						<Button
-							type="submit"
-							className="bg-orange-500 hover:bg-orange-600 text-white"
-							disabled={isPending}
-						>
+						<Button type="submit" disabled={isPending}>
 							{isPending ? (
 								<>
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />

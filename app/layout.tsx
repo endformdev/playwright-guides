@@ -15,9 +15,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
 	maximumScale: 1,
+	themeColor: "#006a42",
 };
 
-const manrope = Manrope({ subsets: ["latin"] });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export default function RootLayout({
 	children,
@@ -27,11 +28,8 @@ export default function RootLayout({
 	const cookieBannerTiming = getCookieBannerTiming();
 
 	return (
-		<html
-			lang="en"
-			className={`bg-white dark:bg-gray-950 text-black dark:text-white ${manrope.className}`}
-		>
-			<body className="min-h-[100dvh] bg-gray-50">
+		<html lang="en" className={manrope.variable}>
+			<body className="min-h-[100dvh] font-sans">
 				<DemoProfileProvider profile={getDemoProfile()}>
 					<SWRConfig
 						value={{

@@ -13,6 +13,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -48,7 +49,7 @@ function ManageSubscription() {
 				<div className="space-y-4">
 					<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
 						<div className="mb-4 sm:mb-0">
-							<p className="font-medium">
+							<p className="font-semibold">
 								Current Plan: {teamData?.planName || "Free"}
 							</p>
 							<p className="text-sm text-muted-foreground">
@@ -80,10 +81,10 @@ function TeamMembersSkeleton() {
 			<CardContent>
 				<div className="animate-pulse space-y-4 mt-1">
 					<div className="flex items-center space-x-4">
-						<div className="size-8 rounded-full bg-gray-200"></div>
+						<div className="size-9 rounded-full bg-stone-200"></div>
 						<div className="space-y-2">
-							<div className="h-4 w-32 bg-gray-200 rounded"></div>
-							<div className="h-3 w-14 bg-gray-200 rounded"></div>
+							<div className="h-4 w-32 bg-stone-200 rounded"></div>
+							<div className="h-3 w-14 bg-stone-200 rounded"></div>
 						</div>
 					</div>
 				</div>
@@ -136,15 +137,15 @@ function TeamMembers() {
 				<CardTitle>Team Members</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<ul className="space-y-4">
+				<ul className="divide-y divide-stone-100">
 					{teamData.teamMembers.map((member) => (
 						<li
 							data-testid="team-member"
 							key={member.id}
-							className="flex items-center justify-between"
+							className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
 						>
 							<div className="flex items-center space-x-4">
-								<Avatar>
+								<Avatar className="size-9">
 									{/*
                     This app doesn't save profile images, but here
                     is how you'd show them:
@@ -154,7 +155,7 @@ function TeamMembers() {
                       alt={getUserDisplayName(member.user)}
                     />
                   */}
-									<AvatarFallback>
+									<AvatarFallback className="bg-brand-100 font-semibold text-brand-800 uppercase">
 										{getUserDisplayName(member.user)
 											.split(" ")
 											.map((n) => n[0])
@@ -190,7 +191,7 @@ function TeamMembers() {
 					))}
 				</ul>
 				{removeState?.error && (
-					<p className="text-red-500 mt-4">{removeState.error}</p>
+					<p className="text-sm text-red-600 mt-4">{removeState.error}</p>
 				)}
 			</CardContent>
 		</Card>
@@ -253,11 +254,13 @@ function InviteTeamMember() {
 						</RadioGroup>
 					</div>
 					{inviteState?.error && (
-						<p className="text-red-500">{inviteState.error}</p>
+						<p className="text-sm text-red-600">{inviteState.error}</p>
 					)}
 					{inviteState?.success && (
 						<div className="space-y-1">
-							<p className="text-green-500">{inviteState.success}</p>
+							<p className="text-sm font-medium text-brand-700">
+								{inviteState.success}
+							</p>
 							{inviteState.id && (
 								<p className="text-sm text-muted-foreground">
 									Invite link for {inviteState.email}:{" "}
@@ -271,11 +274,7 @@ function InviteTeamMember() {
 							)}
 						</div>
 					)}
-					<Button
-						type="submit"
-						className="bg-orange-500 hover:bg-orange-600 text-white"
-						disabled={isInvitePending || !isOwner}
-					>
+					<Button type="submit" disabled={isInvitePending || !isOwner}>
 						{isInvitePending ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -303,8 +302,11 @@ function InviteTeamMember() {
 
 export default function SettingsPage() {
 	return (
-		<section className="flex-1 p-4 lg:p-8">
-			<h1 className="text-lg lg:text-2xl font-medium mb-6">Team Settings</h1>
+		<section>
+			<PageHeader
+				title="Team Settings"
+				description="Your plan, the people in your office, and who can book."
+			/>
 			<Suspense fallback={<SubscriptionSkeleton />}>
 				<ManageSubscription />
 			</Suspense>

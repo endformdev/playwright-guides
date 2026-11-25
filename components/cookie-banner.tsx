@@ -36,17 +36,20 @@ export function CookieBanner({ timing }: { timing: CookieBannerTiming }) {
 	}
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+		<div className="fixed inset-0 z-50 flex items-end justify-center bg-stone-950/40 p-4 backdrop-blur-[2px] sm:items-center">
 			<div
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="cookie-consent-title"
-				className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+				className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-6 shadow-xl"
 			>
-				<h2 id="cookie-consent-title" className="text-lg font-medium">
+				<h2
+					id="cookie-consent-title"
+					className="text-lg font-bold text-stone-900"
+				>
 					We value your privacy
 				</h2>
-				<p className="mt-2 text-sm text-gray-700">
+				<p className="mt-2 text-sm text-stone-600">
 					We use cookies to understand how BikeBook is used and to improve it.
 				</p>
 				<div className="mt-4 flex justify-end gap-2">

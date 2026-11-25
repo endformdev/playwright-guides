@@ -12,6 +12,7 @@ import {
 	UserMinus,
 	UserPlus,
 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getActivityLogs } from "@/lib/db/queries";
 import { ActivityType } from "@/lib/db/schema";
@@ -80,17 +81,18 @@ export default async function ActivityPage() {
 	const logs = await getActivityLogs();
 
 	return (
-		<section className="flex-1 p-4 lg:p-8">
-			<h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
-				Activity Log
-			</h1>
+		<section>
+			<PageHeader
+				title="Activity Log"
+				description="Your sign-ins, bookings and account changes."
+			/>
 			<Card>
 				<CardHeader>
 					<CardTitle>Recent Activity</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{logs.length > 0 ? (
-						<ul className="space-y-4">
+						<ul className="divide-y divide-stone-100">
 							{logs.map((log) => {
 								const Icon = iconMap[log.action as ActivityType] || Settings;
 								const formattedAction = formatAction(
@@ -98,17 +100,20 @@ export default async function ActivityPage() {
 								);
 
 								return (
-									<li key={log.id} className="flex items-center space-x-4">
-										<div className="bg-orange-100 rounded-full p-2">
-											<Icon className="w-5 h-5 text-orange-600" />
+									<li
+										key={log.id}
+										className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
+									>
+										<div className="rounded-lg bg-brand-50 p-2 ring-1 ring-brand-100 ring-inset">
+											<Icon className="size-4 text-brand-700" />
 										</div>
 										<div className="flex-1">
-											<p className="text-sm font-medium text-gray-900">
+											<p className="text-sm font-medium text-stone-900">
 												{formattedAction}
 												{log.detail && ` ${log.detail}`}
 												{log.ipAddress && ` from IP ${log.ipAddress}`}
 											</p>
-											<p className="text-xs text-gray-500">
+											<p className="text-xs text-stone-500">
 												{getRelativeTime(new Date(log.timestamp))}
 											</p>
 										</div>
@@ -118,11 +123,11 @@ export default async function ActivityPage() {
 						</ul>
 					) : (
 						<div className="flex flex-col items-center justify-center text-center py-12">
-							<AlertCircle className="h-12 w-12 text-orange-500 mb-4" />
-							<h3 className="text-lg font-semibold text-gray-900 mb-2">
+							<AlertCircle className="h-10 w-10 text-stone-300 mb-4" />
+							<h3 className="text-base font-semibold text-stone-900 mb-1">
 								No activity yet
 							</h3>
-							<p className="text-sm text-gray-500 max-w-sm">
+							<p className="text-sm text-stone-500 max-w-sm">
 								When you perform actions like signing in or updating your
 								account, they'll appear here.
 							</p>

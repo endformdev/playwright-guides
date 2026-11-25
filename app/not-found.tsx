@@ -1,23 +1,23 @@
-import { CircleIcon } from "lucide-react";
 import Link from "next/link";
+import { LogoMark } from "@/components/logo";
 
 export default function NotFound() {
 	return (
-		<div className="flex items-center justify-center min-h-[100dvh]">
-			<div className="max-w-md space-y-8 p-4 text-center">
+		<div className="flex min-h-[100dvh] items-center justify-center">
+			<div className="max-w-md space-y-6 p-4 text-center">
 				<div className="flex justify-center">
-					<CircleIcon className="size-12 text-orange-500" />
+					<LogoMark className="size-12" />
 				</div>
-				<h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+				<h1 className="text-4xl font-extrabold tracking-tight text-stone-900">
 					Page Not Found
 				</h1>
-				<p className="text-base text-gray-500">
-					The page you are looking for might have been removed, had its name
-					changed, or is temporarily unavailable.
+				<p className="text-base text-stone-500">
+					This page took a wrong turn. It might have been moved, renamed, or
+					never existed.
 				</p>
 				<Link
 					href="/"
-					className="max-w-48 mx-auto flex justify-center py-2 px-4 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+					className="mx-auto flex h-10 max-w-48 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
 				>
 					Back to Home
 				</Link>
