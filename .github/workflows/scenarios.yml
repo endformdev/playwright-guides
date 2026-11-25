@@ -63,8 +63,10 @@ jobs:
           git config user.name "$APP_SLUG[bot]"
           git config user.email "$bot_id+$APP_SLUG[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
-          git apply "scenarios/$SCENARIO.patch"
-          git commit --all --message "$TITLE"
+          # --index stages everything the patch touches, including files it
+          # adds, such as regenerated playwright-intent steps.
+          git apply --index "scenarios/$SCENARIO.patch"
+          git commit --message "$TITLE"
           git push --force origin "$BRANCH"
 
       - name: Open the demo pull request if it isn't open
