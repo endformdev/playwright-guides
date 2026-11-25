@@ -1,27 +1,27 @@
 import { PASSWORD, uniqueEmail } from "../../support/api";
-import { expect, test } from "../../support/fixtures";
-import { AuthForm, signOut } from "../../support/pages";
+import { expect, type Page, test } from "../../support/fixtures";
 
-test("shows the signed-in user as the team owner", async ({
-	teamPage,
-	user,
-}) => {
-	await teamPage.goto();
+const members = (page: Page) => page.getByTestId("team-member");
+const member = (page: Page, nameOrEmail: string) =>
+	members(page).filter({ hasText: nameOrEmail });
 
-	await expect(teamPage.members).toHaveCount(1);
+test("shows the signed-in user as the team owner", async ({ page, user }) => {
+	await page.goto("/dashboard/team");
+
+	await expect(members(page)).toHaveCount(1);
 	await expect(
-		teamPage.member(user.email).getByTestId("team-member-role"),
+		member(page, user.email).getByTestId("team-member-role"),
 	).toHaveText("owner");
 });
 
-test("shows the current plan", async ({ page, teamPage }) => {
-	await teamPage.goto();
+test("shows the current plan", async ({ page }) => {
+	await page.goto("/dashboard/team");
 
 	await expect(page.getByText("Current Plan: Free")).toBeVisible();
 });
 
-test("links to the pricing page to change plan", async ({ page, teamPage }) => {
-	await teamPage.goto();
+test("links to the pricing page to change plan", async ({ page }) => {
+	await page.goto("/dashboard/team");
 
 	await page.getByRole("link", { name: "Change Plan" }).click();
 
@@ -32,21 +32,27 @@ test.describe("inviting team members", () => {
 	test.use({ account: "new" });
 
 	test("owners can invite by email and get an invite link", async ({
-		teamPage,
+		page,
+		ai,
 	}) => {
-		await teamPage.goto();
+		const email = uniqueEmail("teammate");
+		await page.goto("/dashboard/team");
 
-		const link = await teamPage.invite(uniqueEmail("teammate"));
+		await ai.do("invite {email} as a Member", { email });
 
+		const link = await page
+			.getByText(`Invite link for ${email}`)
+			.getByRole("link")
+			.getAttribute("href");
 		expect(link).toMatch(/^\/sign-up\?inviteId=\d+$/);
 	});
 
-	test("the same email can't be invited twice", async ({ page, teamPage }) => {
+	test("the same email can't be invited twice", async ({ page, ai }) => {
 		const email = uniqueEmail("teammate");
-		await teamPage.goto();
-		await teamPage.invite(email);
+		await page.goto("/dashboard/team");
+		await ai.do("invite {email} as a Member", { email });
 
-		await teamPage.inviteEmail.fill(email);
+		await page.getByRole("textbox", { name: "Email" }).fill(email);
 		await page.getByRole("button", { name: "Invite Member" }).click();
 
 		await expect(
@@ -54,14 +60,10 @@ test.describe("inviting team members", () => {
 		).toBeVisible();
 	});
 
-	test("existing members can't be invited", async ({
-		page,
-		user,
-		teamPage,
-	}) => {
-		await teamPage.goto();
+	test("existing members can't be invited", async ({ page, user }) => {
+		await page.goto("/dashboard/team");
 
-		await teamPage.inviteEmail.fill(user.email);
+		await page.getByRole("textbox", { name: "Email" }).fill(user.email);
 		await page.getByRole("button", { name: "Invite Member" }).click();
 
 		await expect(
@@ -73,33 +75,49 @@ test.describe("inviting team members", () => {
 		test(`an invited ${role.toLowerCase()} joins the team with that role`, async ({
 			page,
 			user,
-			teamPage,
+			ai,
 		}) => {
 			const inviteeEmail = uniqueEmail("invitee");
-			await teamPage.goto();
-			const link = await teamPage.invite(inviteeEmail, role);
-			await signOut(page);
+			await page.goto("/dashboard/team");
+			await ai.do("invite {email} as {role}", { email: inviteeEmail, role });
+			const link = (await page
+				.getByText(`Invite link for ${inviteeEmail}`)
+				.getByRole("link")
+				.getAttribute("href")) as string;
 
+			await ai.do("sign out from the user menu");
 			await page.goto(link);
-			await new AuthForm(page).signUp(inviteeEmail, PASSWORD);
+			await ai.do("sign up with email {email} and password {password}", {
+				email: inviteeEmail,
+				password: PASSWORD,
+			});
 
 			await expect(page).toHaveURL("/dashboard");
-			await expect(teamPage.members).toHaveCount(2);
-			await expect(teamPage.member(user.email)).toContainText("owner");
-			await expect(teamPage.member(inviteeEmail)).toContainText(
+			await page.getByRole("link", { name: "Team" }).click();
+			await expect(members(page)).toHaveCount(2);
+			await expect(member(page, user.email)).toContainText("owner");
+			await expect(member(page, inviteeEmail)).toContainText(
 				role.toLowerCase(),
 			);
 		});
 	}
 
-	test("members can't invite others", async ({ page, teamPage }) => {
+	test("members can't invite others", async ({ page, ai }) => {
 		const inviteeEmail = uniqueEmail("invitee");
-		await teamPage.goto();
-		const link = await teamPage.invite(inviteeEmail);
-		await signOut(page);
+		await page.goto("/dashboard/team");
+		await ai.do("invite {email} as a Member", { email: inviteeEmail });
+		const link = (await page
+			.getByText(`Invite link for ${inviteeEmail}`)
+			.getByRole("link")
+			.getAttribute("href")) as string;
 
+		await ai.do("sign out from the user menu");
 		await page.goto(link);
-		await new AuthForm(page).signUp(inviteeEmail, PASSWORD);
+		await ai.do("sign up with email {email} and password {password}", {
+			email: inviteeEmail,
+			password: PASSWORD,
+		});
+		await page.getByRole("link", { name: "Team" }).click();
 
 		await expect(
 			page.getByText("You must be a team owner to invite new members."),
@@ -109,32 +127,43 @@ test.describe("inviting team members", () => {
 		).toBeDisabled();
 	});
 
-	test("owners can remove a member", async ({ page, teamPage, user }) => {
+	test("owners can remove a member", async ({ page, user, ai }) => {
 		const inviteeEmail = uniqueEmail("invitee");
-		const authForm = new AuthForm(page);
-		await teamPage.goto();
-		const link = await teamPage.invite(inviteeEmail);
-		await signOut(page);
-		await page.goto(link);
-		await authForm.signUp(inviteeEmail, PASSWORD);
-		await signOut(page);
-		await authForm.signIn(user.email, user.password);
-		await expect(teamPage.members).toHaveCount(2);
+		await page.goto("/dashboard/team");
+		await ai.do("invite {email} as a Member", { email: inviteeEmail });
+		const link = (await page
+			.getByText(`Invite link for ${inviteeEmail}`)
+			.getByRole("link")
+			.getAttribute("href")) as string;
 
-		await teamPage
-			.member(inviteeEmail)
+		await ai.do("sign out from the user menu");
+		await page.goto(link);
+		await ai.do("sign up with email {email} and password {password}", {
+			email: inviteeEmail,
+			password: PASSWORD,
+		});
+		await ai.do("sign out as the invitee");
+		await page.goto("/sign-in");
+		await ai.do("sign in with email {email} and password {password}", {
+			email: user.email,
+			password: user.password,
+		});
+		await page.getByRole("link", { name: "Team" }).click();
+		await expect(members(page)).toHaveCount(2);
+
+		await member(page, inviteeEmail)
 			.getByRole("button", { name: "Remove" })
 			.click();
 
-		await expect(teamPage.members).toHaveCount(1);
-		await expect(teamPage.member(inviteeEmail)).toHaveCount(0);
+		await expect(members(page)).toHaveCount(1);
+		await expect(member(page, inviteeEmail)).toHaveCount(0);
 	});
 
-	test("owners can't remove themselves", async ({ teamPage, user }) => {
-		await teamPage.goto();
+	test("owners can't remove themselves", async ({ page, user }) => {
+		await page.goto("/dashboard/team");
 
 		await expect(
-			teamPage.member(user.email).getByRole("button", { name: "Remove" }),
+			member(page, user.email).getByRole("button", { name: "Remove" }),
 		).toHaveCount(0);
 	});
 });

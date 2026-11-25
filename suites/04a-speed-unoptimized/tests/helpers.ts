@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { type APIRequestContext, expect, type Page } from "@playwright/test";
 
 export const PASSWORD = "testpassword123";
 
@@ -63,7 +63,7 @@ export async function changePassword(
 }
 
 export async function invite(page: Page, email: string) {
-	await page.goto("/dashboard");
+	await page.goto("/dashboard/team");
 	await page.getByRole("textbox", { name: "Email" }).fill(email);
 	await page.getByRole("button", { name: "Invite Member" }).click();
 	const link = page.getByText(`Invite link for ${email}`).getByRole("link");
@@ -78,7 +78,7 @@ export async function purchase(page: Page, plan: "Base" | "Plus") {
 		.click();
 	await fillCheckout(page);
 	await page.getByRole("button", { name: /Complete Purchase/ }).click();
-	await expect(page).toHaveURL("/dashboard?payment=success");
+	await expect(page).toHaveURL("/dashboard/team?payment=success");
 }
 
 export async function fillCheckout(page: Page, cardNumber = "12345678") {
@@ -92,4 +92,80 @@ export async function fillCheckout(page: Page, cardNumber = "12345678") {
 	await textbox("State").fill("Greater London");
 	await textbox("ZIP Code").fill("N1 9GU");
 	await textbox("Country").fill("United Kingdom");
+}
+
+// --- Bikes -----------------------------------------------------------------
+
+export const OFFICE_FLEET = [
+	{ name: "Road 1", type: "road" },
+	{ name: "Road 2", type: "road" },
+	{ name: "City 1", type: "city" },
+	{ name: "City 2", type: "city" },
+	{ name: "E-City 1", type: "e-city" },
+	{ name: "E-City 2", type: "e-city" },
+	{ name: "E-City 3", type: "e-city" },
+	{ name: "Cargo", type: "cargo" },
+] as const;
+
+export type Bike = { name: string; type: "road" | "city" | "e-city" | "cargo" };
+
+/** Makes the team's fleet match `bikes`, through the Fleet API. */
+export async function setFleet(
+	request: APIRequestContext,
+	apiKey: string,
+	bikes: readonly Bike[] = OFFICE_FLEET,
+) {
+	const response = await request.put("/api/fleet", {
+		headers: { authorization: `Bearer ${apiKey}` },
+		data: { bikes },
+	});
+	if (!response.ok()) {
+		throw new Error(
+			`Setting the fleet failed (${response.status()}): ${await response.text()}`,
+		);
+	}
+}
+
+/** Reads the team's API key off the bikes page, then sets up the fleet. */
+export async function addOfficeFleet(page: Page, bikes = OFFICE_FLEET) {
+	const apiKey = await readApiKey(page);
+	await setFleet(page.request, apiKey, bikes);
+}
+
+export async function readApiKey(page: Page) {
+	await page.goto("/dashboard");
+	const apiKey = page.getByRole("textbox", { name: "API key" });
+	await expect(apiKey).not.toHaveValue("");
+	return apiKey.inputValue();
+}
+
+/** The date `days` days from today, as YYYY-MM-DD in UTC like the app. */
+export function daysFromNow(days: number) {
+	const date = new Date();
+	date.setUTCDate(date.getUTCDate() + days);
+	return date.toISOString().slice(0, 10);
+}
+
+export type Slot = "morning" | "afternoon";
+
+/** How the app names a booking: "Road 1, Thu 4 Jun, morning". */
+export function describeBooking(bike: string, date: string, slot: Slot) {
+	const day = new Intl.DateTimeFormat("en-GB", {
+		weekday: "short",
+		day: "numeric",
+		month: "short",
+		timeZone: "UTC",
+	}).format(new Date(`${date}T00:00:00Z`));
+	return `${bike}, ${day}, ${slot}`;
+}
+
+export async function book(page: Page, bike: string, date: string, slot: Slot) {
+	await page
+		.getByRole("button", { name: `Book ${bike} ${slot}`, exact: true })
+		.click();
+	await expect(
+		page
+			.getByRole("status")
+			.filter({ hasText: `Booked ${describeBooking(bike, date, slot)}` }),
+	).toBeVisible();
 }

@@ -1,6 +1,5 @@
-import { expect, test } from "../../support/fixtures";
-import { signOut } from "../../support/pages";
 import { uniqueEmail } from "../../support/api";
+import { expect, test } from "../../support/fixtures";
 
 test("shows the signed-in user's email", async ({ page, user }) => {
 	await page.goto("/dashboard/general");
@@ -38,11 +37,7 @@ test.describe("updating the account", () => {
 		await expect(name).toHaveValue("Katherine Johnson");
 	});
 
-	test("users can sign in with a changed email", async ({
-		page,
-		user,
-		authForm,
-	}) => {
+	test("users can sign in with a changed email", async ({ page, user, ai }) => {
 		const newEmail = uniqueEmail("changed");
 		await page.goto("/dashboard/general");
 
@@ -50,8 +45,13 @@ test.describe("updating the account", () => {
 		await page.getByRole("textbox", { name: "Email" }).fill(newEmail);
 		await page.getByRole("button", { name: "Save Changes" }).click();
 		await expect(page.getByText("Account updated successfully.")).toBeVisible();
-		await signOut(page);
-		await authForm.signIn(newEmail, user.password);
+
+		await ai.do("sign out from the user menu");
+		await page.goto("/sign-in");
+		await ai.do("sign in with email {email} and password {password}", {
+			email: newEmail,
+			password: user.password,
+		});
 
 		await expect(page).toHaveURL("/dashboard");
 	});

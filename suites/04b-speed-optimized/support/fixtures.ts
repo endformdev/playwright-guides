@@ -1,10 +1,13 @@
 import { test as base, expect, type Page } from "@playwright/test";
 import {
 	type Account,
+	type Bike,
 	createUser,
 	deleteUser,
+	OFFICE_FLEET,
 	PASSWORD,
 	sessionCookie,
+	setFleet,
 } from "./api";
 
 type Options = {
@@ -14,17 +17,24 @@ type Options = {
 	 * which is much faster than signing up through the form.
 	 */
 	account: "shared" | "new";
+	/**
+	 * The bikes a `"new"` account's team starts with, set through the Fleet
+	 * API. Defaults to the office fleet; `[]` leaves the team without bikes.
+	 */
+	fleet: readonly Bike[];
 };
 
 export const test = base.extend<
 	Options & { user: Account; newAccount: Account | undefined }
 >({
 	account: ["shared", { option: true }],
+	fleet: [OFFICE_FLEET, { option: true }],
 	newAccount: [
-		async ({ account, request, context, baseURL }, use) => {
+		async ({ account, fleet, request, context, baseURL }, use) => {
 			if (account !== "new") return use(undefined);
 
 			const user = await createUser(request);
+			if (fleet.length > 0) await setFleet(request, user.apiKey, fleet);
 			await context.addCookies([
 				sessionCookie(user.session, baseURL as string),
 			]);

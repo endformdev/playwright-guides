@@ -1,6 +1,16 @@
 import { fillCheckout, purchase } from "../support/actions";
 import { expect, test } from "../support/fixtures";
 
+test("pricing lists both plans", async ({ page }) => {
+	await page.goto("/pricing");
+
+	await expect(page.getByText("Unlimited bookings")).toBeVisible();
+	await expect(page.getByText("Everything in Base, and:")).toBeVisible();
+	await expect(page.getByRole("button", { name: "Get Started" })).toHaveCount(
+		2,
+	);
+});
+
 test("checkout summarises the chosen plan", async ({ page }) => {
 	await page.goto("/pricing/checkout?plan=Plus&amount=1200");
 
@@ -33,15 +43,10 @@ test.describe("upgrading", { tag: "@payments" }, () => {
 		await expect(page.getByText("Billed monthly")).toBeVisible();
 	});
 
-	test("upgrading to Plus starts a subscription", async ({ page }) => {
+	test("upgrading to Plus records exactly one payment", async ({ page }) => {
 		await purchase(page, "Plus");
 
 		await expect(page.getByText("Current Plan: Plus")).toBeVisible();
-	});
-
-	test("an upgrade records exactly one payment", async ({ page }) => {
-		await purchase(page, "Plus");
-
 		const payments = await (await page.request.get("/api/payment")).json();
 		expect(payments).toHaveLength(1);
 		expect(payments[0]).toMatchObject({ planName: "Plus", amount: 1200 });

@@ -40,7 +40,7 @@ for (const plan of plans) {
 
 test("Plus includes everything in Base", async ({ page }) => {
 	await expect(page.getByText("Everything in Base, and:")).toBeVisible();
-	await expect(page.getByText("24/7 Support + Slack Access")).toBeVisible();
+	await expect(page.getByText("24/7 support + Slack access")).toBeVisible();
 });
 
 test("explains that payments are a demo", async ({ page }) => {

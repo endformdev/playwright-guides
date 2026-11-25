@@ -1,5 +1,4 @@
 import { expect, type Page, test } from "../../support/fixtures";
-import { signOut } from "../../support/pages";
 
 async function changePassword(
 	page: Page,
@@ -25,15 +24,19 @@ test.describe("changing password", () => {
 		test("users can sign in with their new password", async ({
 			page,
 			user,
-			authForm,
+			ai,
 		}) => {
 			await changePassword(page, user.password, "a-brand-new-password");
 			await expect(
 				page.getByText("Password updated successfully."),
 			).toBeVisible();
-			await signOut(page);
 
-			await authForm.signIn(user.email, "a-brand-new-password");
+			await ai.do("sign out from the user menu");
+			await page.goto("/sign-in");
+			await ai.do("sign in with email {email} and password {password}", {
+				email: user.email,
+				password: "a-brand-new-password",
+			});
 
 			await expect(page).toHaveURL("/dashboard");
 		});
@@ -88,7 +91,7 @@ test.describe("deleting the account", () => {
 	test.describe(() => {
 		test.use({ account: "new" });
 
-		test("signs the user out for good", async ({ page, user, authForm }) => {
+		test("signs the user out for good", async ({ page, user, ai }) => {
 			await page.goto("/dashboard/security");
 
 			await page
@@ -97,7 +100,10 @@ test.describe("deleting the account", () => {
 			await page.getByRole("button", { name: "Delete Account" }).click();
 			await expect(page).toHaveURL("/sign-in");
 
-			await authForm.signIn(user.email, user.password);
+			await ai.do("sign in with email {email} and password {password}", {
+				email: user.email,
+				password: user.password,
+			});
 			await expect(
 				page.getByText("Invalid email or password. Please try again."),
 			).toBeVisible();

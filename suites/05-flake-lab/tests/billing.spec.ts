@@ -28,28 +28,6 @@ test("checkout explains which plan is being bought", async ({ page }) => {
 	});
 });
 
-test("an upgrade shows the new plan on the team page", async ({
-	page,
-	user: _user,
-}) => {
-	await test.step("Check the team is on the free plan", async () => {
-		await page.goto("/dashboard");
-		await expect(page.getByText("Current Plan: Free")).toBeVisible();
-	});
-
-	await test.step("Buy the Plus plan", async () => {
-		await page.getByRole("link", { name: "Change Plan" }).click();
-		await page.getByRole("button", { name: "Get Started" }).nth(1).click();
-		await fillCheckout(page);
-		await page.getByRole("button", { name: /Complete Purchase/ }).click();
-	});
-
-	await test.step("See the team on the Plus plan", async () => {
-		await expect(page).toHaveURL("/dashboard?payment=success");
-		await expect(page.getByText("Current Plan: Plus")).toBeVisible();
-	});
-});
-
 // This test deliberately doesn't use the shared fixtures: it handles the
 // cookie consent dialog itself, by checking for it once.
 base(
@@ -76,7 +54,7 @@ base(
 		});
 
 		await base.step("See the team on the Base plan", async () => {
-			await expect(page).toHaveURL("/dashboard?payment=success");
+			await expect(page).toHaveURL("/dashboard/team?payment=success");
 			await expect(page.getByText("Billed monthly")).toBeVisible();
 		});
 

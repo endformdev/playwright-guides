@@ -33,7 +33,7 @@ test("a renamed user shows up in the team list", async ({
 	user: _user,
 }) => {
 	await test.step("Open the team settings", async () => {
-		await page.goto("/dashboard");
+		await page.goto("/dashboard/team");
 		await expect(page.getByTestId("team-member")).toHaveCount(1);
 	});
 
@@ -107,20 +107,5 @@ test("the activity log shows the latest change first", async ({
 		const entries = page.getByRole("listitem");
 		await expect(entries.nth(0)).toContainText("You changed your password");
 		await expect(entries.nth(1)).toContainText("You updated your account");
-	});
-});
-
-test("the activity log records the sign up", async ({ page, user: _user }) => {
-	await test.step("Open the activity log", async () => {
-		await page.goto("/dashboard/activity");
-	});
-
-	await test.step("Find the sign up and the new team in it", async () => {
-		await expect(
-			page.getByRole("listitem").filter({ hasText: "You signed up" }),
-		).toBeVisible();
-		await expect(
-			page.getByRole("listitem").filter({ hasText: "You created a new team" }),
-		).toBeVisible();
 	});
 });

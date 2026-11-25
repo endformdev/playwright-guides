@@ -11,7 +11,7 @@ test("a visitor compares the plans", async ({ page }) => {
 	});
 });
 
-test("a visitor signs up and lands on their team", async ({ page }) => {
+test("a visitor signs up and lands on the bikes page", async ({ page }) => {
 	const email = uniqueEmail();
 
 	await test.step("Fill in the sign up form", async () => {
@@ -21,10 +21,10 @@ test("a visitor signs up and lands on their team", async ({ page }) => {
 		await page.getByRole("button", { name: "Sign up" }).click();
 	});
 
-	await test.step("See yourself as the owner of a new team", async () => {
+	await test.step("See the bikes page of a new office without bikes", async () => {
 		await expect(page).toHaveURL("/dashboard");
-		await expect(page.getByTestId("team-member-name")).toHaveText(email);
-		await expect(page.getByTestId("team-member-role")).toHaveText("owner");
+		await expect(page.getByRole("heading", { name: "Bikes" })).toBeVisible();
+		await expect(page.getByText("Your office has no bikes yet.")).toBeVisible();
 	});
 });
 

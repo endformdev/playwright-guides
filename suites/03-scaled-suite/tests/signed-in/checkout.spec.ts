@@ -1,21 +1,63 @@
-import { expect, test } from "../../support/fixtures";
+import { expect, type Page, test } from "../../support/fixtures";
+
+const VALID_PAYMENT = {
+	cardHolderName: "Ada Lovelace",
+	cardNumber: "12345678",
+	expiryDate: "12/30",
+	cvv: "123",
+	billingAddress: "1 Analytical Engine Way",
+	city: "London",
+	state: "Greater London",
+	zipCode: "N1 9GU",
+	country: "United Kingdom",
+} as const;
+
+const PAYMENT_LABELS: Record<keyof typeof VALID_PAYMENT, string> = {
+	cardHolderName: "Card Holder Name",
+	cardNumber: "Card Number (8 digits only)",
+	expiryDate: "Expiry Date",
+	cvv: "CVV",
+	billingAddress: "Street Address",
+	city: "City",
+	state: "State",
+	zipCode: "ZIP Code",
+	country: "Country",
+};
+
+async function openCheckout(page: Page, plan: "Base" | "Plus") {
+	await page.goto("/pricing");
+	await page
+		.getByRole("button", { name: "Get Started" })
+		.nth(plan === "Base" ? 0 : 1)
+		.click();
+	await expect(page).toHaveURL(/\/pricing\/checkout/);
+}
+
+async function fillCheckout(
+	page: Page,
+	overrides: Partial<Record<keyof typeof VALID_PAYMENT, string>> = {},
+) {
+	const values = { ...VALID_PAYMENT, ...overrides };
+	for (const [field, label] of Object.entries(PAYMENT_LABELS)) {
+		await page
+			.getByRole("textbox", { name: label })
+			.fill(values[field as keyof typeof VALID_PAYMENT]);
+	}
+}
 
 for (const { plan, price } of [
 	{ plan: "Base", price: "$8/month" },
 	{ plan: "Plus", price: "$12/month" },
 ] as const) {
-	test(`checkout summarises the ${plan} plan`, async ({
-		page,
-		checkoutPage,
-	}) => {
-		await checkoutPage.goto(plan);
+	test(`checkout summarises the ${plan} plan`, async ({ page }) => {
+		await openCheckout(page, plan);
 
 		await expect(
 			page.getByText(`You are purchasing: ${plan} for ${price}`),
 		).toBeVisible();
-		await expect(checkoutPage.submit).toHaveText(
-			`Complete Purchase - ${price}`,
-		);
+		await expect(
+			page.getByRole("button", { name: /Complete Purchase/ }),
+		).toHaveText(`Complete Purchase - ${price}`);
 	});
 }
 
@@ -24,20 +66,24 @@ test.describe("upgrading", () => {
 
 	test("upgrading to Base starts a monthly subscription", async ({
 		page,
-		checkoutPage,
+		ai,
 	}) => {
-		await checkoutPage.purchase("Base");
+		await page.goto("/pricing");
+		await ai.do("choose the Base plan and complete checkout with a valid card");
 
+		await expect(page).toHaveURL("/dashboard/team?payment=success");
 		await expect(page.getByText("Current Plan: Base")).toBeVisible();
 		await expect(page.getByText("Billed monthly")).toBeVisible();
 	});
 
 	test("upgrading to Plus records exactly one payment", async ({
 		page,
-		checkoutPage,
+		ai,
 	}) => {
-		await checkoutPage.purchase("Plus");
+		await page.goto("/pricing");
+		await ai.do("choose the Plus plan and complete checkout with a valid card");
 
+		await expect(page).toHaveURL("/dashboard/team?payment=success");
 		const payments = await (await page.request.get("/api/payment")).json();
 		expect(payments).toHaveLength(1);
 		expect(payments[0]).toMatchObject({
@@ -59,19 +105,15 @@ const invalidFields = [
 ] as const;
 
 for (const { field, value, reason } of invalidFields) {
-	test(`a ${field} that is ${reason} can't be submitted`, async ({
-		page,
-		checkoutPage,
-	}) => {
-		await checkoutPage.goto("Plus");
-		await checkoutPage.fill({ [field]: value });
+	test(`a ${field} that is ${reason} can't be submitted`, async ({ page }) => {
+		await openCheckout(page, "Plus");
+		await fillCheckout(page, { [field]: value });
 
-		await checkoutPage.submit.click();
+		await page.getByRole("button", { name: /Complete Purchase/ }).click();
 
-		await expect(checkoutPage.fields[field]).toHaveJSProperty(
-			"validity.valid",
-			false,
-		);
+		await expect(
+			page.getByRole("textbox", { name: PAYMENT_LABELS[field] }),
+		).toHaveJSProperty("validity.valid", false);
 		await expect(page).toHaveURL(/\/pricing\/checkout/);
 	});
 }

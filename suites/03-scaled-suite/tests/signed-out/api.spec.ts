@@ -32,11 +32,10 @@ test("unknown pages show a not found page", async ({ page }) => {
 
 test("submitting a checkout while signed out asks you to sign in", async ({
 	page,
-	checkoutPage,
+	ai,
 }) => {
-	await checkoutPage.goto("Plus");
-	await checkoutPage.fill();
-	await checkoutPage.submit.click();
+	await page.goto("/pricing");
+	await ai.do("choose the Plus plan and submit checkout with a valid card");
 
 	await expect(page).toHaveURL(/\/sign-in/);
 });

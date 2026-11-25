@@ -3,8 +3,10 @@ import {
 	type Account,
 	createUser,
 	deleteUser,
+	OFFICE_FLEET,
 	PASSWORD,
 	sessionCookie,
+	setFleet,
 	uniqueEmail,
 } from "./api";
 
@@ -30,9 +32,13 @@ export const test = base.extend<{ user: Account }>({
 	user: async ({ request, context, baseURL }, use) => {
 		const user = await createUser(request);
 		await context.addCookies([sessionCookie(user.session, baseURL as string)]);
-		await use({ email: user.email, password: user.password });
+		await use({
+			email: user.email,
+			password: user.password,
+			apiKey: user.apiKey,
+		});
 		await deleteUser(request, user.email);
 	},
 });
 
-export { expect, PASSWORD, uniqueEmail };
+export { expect, OFFICE_FLEET, PASSWORD, setFleet, uniqueEmail };

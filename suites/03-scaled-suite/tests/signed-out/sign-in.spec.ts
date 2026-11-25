@@ -1,21 +1,23 @@
 import { PASSWORD, uniqueEmail } from "../../support/api";
 import { expect, test } from "../../support/fixtures";
 
-test("users can sign in", async ({ page, existingUser, authForm }) => {
-	await authForm.signIn(existingUser.email, existingUser.password);
+test("users can sign in", async ({ page, existingUser, ai }) => {
+	await page.goto("/sign-in");
+	await ai.do("sign in with email {email} and password {password}", {
+		email: existingUser.email,
+		password: existingUser.password,
+	});
 
 	await expect(page).toHaveURL("/dashboard");
-	await expect(page.getByTestId("team-member-name")).toHaveText(
-		existingUser.email,
-	);
+	await expect(page.getByRole("heading", { name: "Bikes" })).toBeVisible();
 });
 
-test("a wrong password is rejected", async ({
-	page,
-	existingUser,
-	authForm,
-}) => {
-	await authForm.signIn(existingUser.email, "not-the-password");
+test("a wrong password is rejected", async ({ page, existingUser, ai }) => {
+	await page.goto("/sign-in");
+	await ai.do("sign in with email {email} and password {password}", {
+		email: existingUser.email,
+		password: "not-the-password",
+	});
 
 	await expect(
 		page.getByText("Invalid email or password. Please try again."),
@@ -24,9 +26,13 @@ test("a wrong password is rejected", async ({
 
 test("an unknown email is rejected with the same message", async ({
 	page,
-	authForm,
+	ai,
 }) => {
-	await authForm.signIn(uniqueEmail("unknown"), PASSWORD);
+	await page.goto("/sign-in");
+	await ai.do("sign in with email {email} and password {password}", {
+		email: uniqueEmail("unknown"),
+		password: PASSWORD,
+	});
 
 	await expect(
 		page.getByText("Invalid email or password. Please try again."),
@@ -43,6 +49,7 @@ test("links to the sign up page", async ({ page }) => {
 
 for (const path of [
 	"/dashboard",
+	"/dashboard/team",
 	"/dashboard/general",
 	"/dashboard/activity",
 	"/dashboard/security",

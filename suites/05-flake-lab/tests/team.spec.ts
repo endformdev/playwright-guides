@@ -4,7 +4,7 @@ test("an owner invites a teammate", async ({ page, user: _user }) => {
 	const teammate = uniqueEmail("teammate");
 
 	await test.step("Open the team settings", async () => {
-		await page.goto("/dashboard");
+		await page.goto("/dashboard/team");
 	});
 
 	await test.step("Invite a teammate by email", async () => {

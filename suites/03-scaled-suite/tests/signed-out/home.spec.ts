@@ -5,20 +5,22 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("shows the product headline", async ({ page }) => {
-	await expect(page).toHaveTitle("ACME");
+	await expect(page).toHaveTitle("BikeBook");
 	await expect(
-		page.getByRole("heading", { name: "Build Your SaaS Faster Than Ever" }),
+		page.getByRole("heading", {
+			name: "The office bike pool, without the spreadsheet",
+		}),
 	).toBeVisible();
 });
 
 test("header links to pricing", async ({ page }) => {
-	await page.getByRole("link", { name: "Pricing" }).click();
+	await page.getByRole("link", { name: "Pricing", exact: true }).click();
 
 	await expect(page).toHaveURL("/pricing");
 });
 
 test("header links to sign up", async ({ page }) => {
-	await page.getByRole("link", { name: "Sign Up" }).click();
+	await page.getByRole("link", { name: "Sign Up", exact: true }).click();
 
 	await expect(page).toHaveURL("/sign-up");
 	await expect(
@@ -26,9 +28,8 @@ test("header links to sign up", async ({ page }) => {
 	).toBeVisible();
 });
 
-test("shows the getting started commands", async ({ page }) => {
-	await expect(
-		page.getByText("git clone https://github.com/endformdev/playwright-guides"),
-	).toBeVisible();
-	await expect(page.getByText("pnpm install")).toBeVisible();
+test("the call to action starts sign up", async ({ page }) => {
+	await page.getByRole("link", { name: "Start booking" }).click();
+
+	await expect(page).toHaveURL("/sign-up");
 });

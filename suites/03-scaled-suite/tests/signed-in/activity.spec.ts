@@ -1,6 +1,5 @@
 import { uniqueEmail } from "../../support/api";
 import { expect, type Page, test } from "../../support/fixtures";
-import { signOut } from "../../support/pages";
 
 const entries = (page: Page) => page.getByRole("listitem");
 
@@ -54,9 +53,11 @@ test.describe("after changes to the account", () => {
 		);
 	});
 
-	test("invitations are logged", async ({ page, teamPage }) => {
-		await teamPage.goto();
-		await teamPage.invite(uniqueEmail("teammate"));
+	test("invitations are logged", async ({ page, ai }) => {
+		await page.goto("/dashboard/team");
+		await ai.do("invite {email} as a Member", {
+			email: uniqueEmail("teammate"),
+		});
 
 		await page.getByRole("link", { name: "Activity" }).click();
 
@@ -65,10 +66,14 @@ test.describe("after changes to the account", () => {
 		);
 	});
 
-	test("signing in is logged", async ({ page, user, authForm }) => {
+	test("signing in is logged", async ({ page, user, ai }) => {
 		await page.goto("/dashboard");
-		await signOut(page);
-		await authForm.signIn(user.email, user.password);
+		await ai.do("sign out from the user menu");
+		await page.goto("/sign-in");
+		await ai.do("sign in with email {email} and password {password}", {
+			email: user.email,
+			password: user.password,
+		});
 
 		await page.getByRole("link", { name: "Activity" }).click();
 
