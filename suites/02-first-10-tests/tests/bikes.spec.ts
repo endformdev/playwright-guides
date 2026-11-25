@@ -14,10 +14,10 @@ test("the office's bikes are listed with their type", async ({ page }) => {
 	const rows = page.getByRole("row");
 
 	// A header row, then one row per bike in the order they were added.
-	await expect(rows).toHaveCount(9);
+	await expect(rows).toHaveCount(5);
 	await expect(rows.nth(1)).toContainText("Road 1");
 	await expect(rows.nth(1)).toContainText("Road bike");
-	await expect(rows.nth(8)).toContainText("Cargo bike");
+	await expect(rows.nth(4)).toContainText("Cargo bike");
 });
 
 test("users can book a bike and see it in their upcoming bookings", async ({

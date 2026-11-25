@@ -126,17 +126,26 @@ export async function setFleet(
 	}
 }
 
-/** Reads the team's API key off the bikes page, then sets up the fleet. */
-export async function addOfficeFleet(page: Page, bikes = OFFICE_FLEET) {
-	const apiKey = await readApiKey(page);
-	await setFleet(page.request, apiKey, bikes);
+/** Adds a bike through the Manage fleet UI on the bikes page. */
+export async function addBike(
+	page: Page,
+	name: string,
+	type: "road" | "city" | "e-city" | "cargo",
+) {
+	await page.getByRole("textbox", { name: "Bike name" }).fill(name);
+	await page.getByRole("combobox", { name: "Bike type" }).selectOption(type);
+	await page.getByRole("button", { name: "Add bike" }).click();
+	await expect(
+		page.getByRole("rowheader", { name, exact: true }),
+	).toBeVisible();
 }
 
-export async function readApiKey(page: Page) {
+/** Sets up the office fleet through the UI on the bikes page. */
+export async function addOfficeFleet(page: Page, bikes = OFFICE_FLEET) {
 	await page.goto("/dashboard");
-	const apiKey = page.getByRole("textbox", { name: "API key" });
-	await expect(apiKey).not.toHaveValue("");
-	return apiKey.inputValue();
+	for (const bike of bikes) {
+		await addBike(page, bike.name, bike.type);
+	}
 }
 
 /** The date `days` days from today, as YYYY-MM-DD in UTC like the app. */

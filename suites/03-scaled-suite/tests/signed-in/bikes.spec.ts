@@ -56,15 +56,15 @@ test.describe("the fleet", () => {
 	test.describe("an empty office", () => {
 		test.use({ account: "new", fleet: [] });
 
-		test("explains how owners add bikes", async ({ page, apiKey }) => {
+		test("explains how owners add bikes", async ({ page }) => {
 			await page.goto("/dashboard");
 
 			await expect(
 				page.getByText("Your office has no bikes yet."),
 			).toBeVisible();
-			await expect(page.getByRole("textbox", { name: "API key" })).toHaveValue(
-				apiKey,
-			);
+			await expect(
+				page.getByRole("button", { name: "Add bike" }),
+			).toBeVisible();
 		});
 	});
 });
@@ -238,13 +238,13 @@ test.describe("booking with teammates", () => {
 		return { email, page: memberPage };
 	}
 
-	test("only owners see the Fleet API key", async ({ page, browser }) => {
+	test("only owners can manage the fleet", async ({ page, browser }) => {
 		const member = await addMember(page, browser);
 
 		await page.goto("/dashboard");
-		await expect(page.getByRole("textbox", { name: "API key" })).toBeVisible();
+		await expect(page.getByRole("button", { name: "Add bike" })).toBeVisible();
 		await expect(
-			member.page.getByRole("textbox", { name: "API key" }),
+			member.page.getByRole("button", { name: "Add bike" }),
 		).toHaveCount(0);
 	});
 
@@ -284,37 +284,47 @@ test.describe("booking with teammates", () => {
 	});
 });
 
-test.describe("the Fleet API key", () => {
+test.describe("managing the fleet", () => {
 	test.use({ account: "new" });
 
-	test("owners see their team's key", async ({ page, apiKey }) => {
+	test("owners can add and remove bikes through the UI", async ({ page }) => {
 		await page.goto("/dashboard");
 
-		await expect(page.getByRole("textbox", { name: "API key" })).toHaveValue(
-			apiKey,
-		);
+		await page.getByRole("textbox", { name: "Bike name" }).fill("Gravel 1");
+		await page
+			.getByRole("combobox", { name: "Bike type" })
+			.selectOption("road");
+		await page.getByRole("button", { name: "Add bike" }).click();
+		await expect(
+			page.getByRole("rowheader", { name: "Gravel 1", exact: true }),
+		).toBeVisible();
+
+		await page.getByRole("button", { name: "Remove Gravel 1" }).click();
+		await expect(
+			page.getByRole("rowheader", { name: "Gravel 1", exact: true }),
+		).toHaveCount(0);
 	});
 
-	test("generating a new key revokes the old one", async ({
-		page,
-		apiKey,
-		request,
-	}) => {
+	test("duplicate bike names are rejected", async ({ page }) => {
 		await page.goto("/dashboard");
 
-		await page.getByRole("button", { name: "Generate a new key" }).click();
-		await expect(page.getByRole("status")).toContainText(
-			"Generated a new API key",
-		);
-		const newKey = await page
-			.getByRole("textbox", { name: "API key" })
-			.inputValue();
+		await page.getByRole("textbox", { name: "Bike name" }).fill("Road 1");
+		await page.getByRole("button", { name: "Add bike" }).click();
 
-		const auth = (key: string) => ({
-			headers: { authorization: `Bearer ${key}` },
-		});
-		expect((await request.get("/api/fleet", auth(apiKey))).status()).toBe(401);
-		expect((await request.get("/api/fleet", auth(newKey))).status()).toBe(200);
+		await expect(
+			page.getByText("A bike named Road 1 is already in your fleet"),
+		).toBeVisible();
+	});
+
+	test("removing a bike removes its bookings", async ({ page }) => {
+		await book(page, "Cargo", "morning", daysFromNow(3));
+
+		await page.getByRole("button", { name: "Remove Cargo" }).click();
+
+		await expect(
+			page.getByRole("rowheader", { name: "Cargo", exact: true }),
+		).toHaveCount(0);
+		await expect(page.getByText("No upcoming bookings.")).toBeVisible();
 	});
 
 	test("changing the fleet through the API keeps bookings of kept bikes", async ({

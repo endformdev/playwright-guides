@@ -39,7 +39,7 @@ pnpm db:seed
 
 Each team books from its own fleet on `/dashboard`: every bike has a morning and an afternoon slot per day, and a slot can only be booked once. Members can cancel their own bookings; owners can cancel anyone's.
 
-New teams start without bikes. Owners set up the fleet with the Fleet API, using the team's API key from the bikes page:
+New teams start without bikes. Owners can add or remove bikes directly on `/dashboard`, or manage the fleet programmatically with the Fleet API:
 
 ```bash
 curl -X PUT http://localhost:3000/api/fleet \

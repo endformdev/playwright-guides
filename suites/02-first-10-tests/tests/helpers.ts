@@ -6,35 +6,36 @@ export function uniqueEmail(prefix = "user") {
 	return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 }
 
-/** The bikes most of the tests' offices have. */
+/** The bikes these tests add to an office through the Manage fleet UI. */
 export const OFFICE_FLEET = [
 	{ name: "Road 1", type: "road" },
-	{ name: "Road 2", type: "road" },
 	{ name: "City 1", type: "city" },
-	{ name: "City 2", type: "city" },
-	{ name: "E-City 1", type: "e-city" },
 	{ name: "E-City 2", type: "e-city" },
-	{ name: "E-City 3", type: "e-city" },
 	{ name: "Cargo", type: "cargo" },
-];
+] as const;
+
+export async function addBike(
+	page: Page,
+	name: string,
+	type: "road" | "city" | "e-city" | "cargo",
+) {
+	await page.getByRole("textbox", { name: "Bike name" }).fill(name);
+	await page.getByRole("combobox", { name: "Bike type" }).selectOption(type);
+	await page.getByRole("button", { name: "Add bike" }).click();
+	await expect(
+		page.getByRole("rowheader", { name, exact: true }),
+	).toBeVisible();
+}
 
 /**
- * New teams start without bikes. A team's owner finds the team's API key on
- * the bikes page, and the Fleet API sets up its bikes.
+ * New teams start without bikes. Add the office fleet through the Manage fleet
+ * form on the bikes page.
  */
-export async function addOfficeFleet(page: Page) {
+export async function addOfficeFleet(page: Page, bikes = OFFICE_FLEET) {
 	await page.goto("/dashboard");
-	const apiKey = await page
-		.getByRole("textbox", { name: "API key" })
-		.inputValue();
-
-	const response = await page.request.put("/api/fleet", {
-		headers: { authorization: `Bearer ${apiKey}` },
-		data: { bikes: OFFICE_FLEET },
-	});
-	expect(response.ok()).toBe(true);
-
-	await page.reload();
+	for (const bike of bikes) {
+		await addBike(page, bike.name, bike.type);
+	}
 }
 
 /** A day a week from now, as YYYY-MM-DD, so it's always bookable. */

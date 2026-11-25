@@ -73,11 +73,17 @@ export async function fillCheckout(page: Page, cardNumber = "12345678") {
 	await textbox("Country").fill("United Kingdom");
 }
 
-export async function readApiKey(page: Page) {
-	await page.goto("/dashboard");
-	const apiKey = page.getByRole("textbox", { name: "API key" });
-	await expect(apiKey).not.toHaveValue("");
-	return apiKey.inputValue();
+export async function addBike(
+	page: Page,
+	name: string,
+	type: "road" | "city" | "e-city" | "cargo",
+) {
+	await page.getByRole("textbox", { name: "Bike name" }).fill(name);
+	await page.getByRole("combobox", { name: "Bike type" }).selectOption(type);
+	await page.getByRole("button", { name: "Add bike" }).click();
+	await expect(
+		page.getByRole("rowheader", { name, exact: true }),
+	).toBeVisible();
 }
 
 /** The date `days` days from today, as YYYY-MM-DD in UTC like the app. */

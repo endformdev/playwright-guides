@@ -102,6 +102,25 @@ export async function syncFleet(
 	return getFleet(teamId);
 }
 
+export async function addBike(
+	teamId: number,
+	bike: { name: string; type: BikeType },
+) {
+	const [created] = await db
+		.insert(bikes)
+		.values({ teamId, name: bike.name, type: bike.type })
+		.returning({ id: bikes.id, name: bikes.name, type: bikes.type });
+	return created;
+}
+
+export async function removeBike(teamId: number, bikeId: number) {
+	const existing = await getBike(teamId, bikeId);
+	if (!existing) return null;
+	await db.delete(bookings).where(eq(bookings.bikeId, existing.id));
+	await db.delete(bikes).where(eq(bikes.id, existing.id));
+	return existing;
+}
+
 export async function getBike(teamId: number, bikeId: number) {
 	const [bike] = await db
 		.select()

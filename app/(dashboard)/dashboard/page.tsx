@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import {
-	getApiKey,
 	getBookingsForDay,
 	getFleet,
 	getUpcomingBookings,
@@ -12,7 +11,7 @@ import { getUser, getUserWithTeam } from "@/lib/db/queries";
 import {
 	BookingGrid,
 	DayPicker,
-	FleetApiKey,
+	ManageFleet,
 	UpcomingBookings,
 } from "./bookings";
 
@@ -32,11 +31,10 @@ export default async function BikesPage({
 	const date =
 		requestedDate && isValidDate(requestedDate) ? requestedDate : today();
 
-	const [fleet, dayBookings, upcoming, apiKey] = await Promise.all([
+	const [fleet, dayBookings, upcoming] = await Promise.all([
 		getFleet(teamId),
 		getBookingsForDay(teamId, date),
 		getUpcomingBookings(user.id, today()),
-		isOwner ? getApiKey(teamId) : null,
 	]);
 
 	return (
@@ -57,7 +55,7 @@ export default async function BikesPage({
 				isOwner={isOwner}
 			/>
 			<UpcomingBookings bookings={upcoming} />
-			{isOwner && <FleetApiKey apiKey={apiKey} />}
+			{isOwner && <ManageFleet bikes={fleet} />}
 		</section>
 	);
 }

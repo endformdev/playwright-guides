@@ -3,8 +3,7 @@ import { getFleet, getTeamForApiKey, syncFleet } from "@/lib/bikes";
 import { BIKE_TYPES } from "@/lib/db/schema";
 
 /**
- * The Fleet API. Every request is authenticated with the team's API key, which
- * owners can find on the bikes page:
+ * The Fleet API. Every request is authenticated with the team's API key:
  *
  *   Authorization: Bearer <api key>
  *

@@ -6,17 +6,24 @@ import { z } from "zod";
 import { logActivity } from "@/lib/auth/activity";
 import { validatedActionWithUser } from "@/lib/auth/middleware";
 import {
+	addBike as insertBike,
 	describeBooking,
 	getBike,
 	getBooking,
+	getFleet,
 	isUniqueViolation,
 	isValidDate,
-	regenerateApiKey,
+	removeBike as deleteBike,
 	today,
 } from "@/lib/bikes";
 import { db } from "@/lib/db/drizzle";
 import { getUserWithTeam } from "@/lib/db/queries";
-import { ActivityType, BOOKING_SLOTS, bookings } from "@/lib/db/schema";
+import {
+	ActivityType,
+	BIKE_TYPES,
+	BOOKING_SLOTS,
+	bookings,
+} from "@/lib/db/schema";
 import { simulateLatency } from "@/lib/demo-profile";
 
 const BIKES_PATH = "/dashboard";
@@ -100,16 +107,55 @@ export const cancelBooking = validatedActionWithUser(
 	},
 );
 
-export const regenerateFleetApiKey = validatedActionWithUser(
-	z.object({}),
-	async (_data, _, user) => {
+const addBikeSchema = z.object({
+	name: z.string().trim().min(1, "Enter a bike name").max(40),
+	type: z.enum(BIKE_TYPES),
+});
+
+export const addBike = validatedActionWithUser(
+	addBikeSchema,
+	async ({ name, type }, _, user) => {
 		const { teamId, teamRole } = await getUserWithTeam(user.id);
 		if (!teamId || teamRole !== "owner") {
-			return { error: "Only team owners can manage the API key" };
+			return { error: "Only team owners can manage the fleet" };
 		}
 
-		await regenerateApiKey(teamId);
+		const fleet = await getFleet(teamId);
+		if (fleet.length >= 50) {
+			return { error: "Your fleet can have at most 50 bikes" };
+		}
+
+		try {
+			await insertBike(teamId, { name, type });
+		} catch (error) {
+			if (!isUniqueViolation(error)) throw error;
+			return { error: `A bike named ${name} is already in your fleet` };
+		}
+
 		revalidatePath(BIKES_PATH);
-		return { success: "Generated a new API key. The old one no longer works." };
+		return { success: `Added ${name}` };
+	},
+);
+
+const removeBikeSchema = z.object({
+	bikeId: z.coerce.number().int(),
+});
+
+export const removeBike = validatedActionWithUser(
+	removeBikeSchema,
+	async ({ bikeId }, _, user) => {
+		const { teamId, teamRole } = await getUserWithTeam(user.id);
+		if (!teamId || teamRole !== "owner") {
+			return { error: "Only team owners can manage the fleet" };
+		}
+
+		const removed = await deleteBike(teamId, bikeId);
+		if (!removed) {
+			revalidatePath(BIKES_PATH);
+			return { error: "That bike is no longer in your fleet" };
+		}
+
+		revalidatePath(BIKES_PATH);
+		return { success: `Removed ${removed.name}` };
 	},
 );

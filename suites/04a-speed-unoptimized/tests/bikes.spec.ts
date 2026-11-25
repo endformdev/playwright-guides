@@ -5,10 +5,8 @@ import {
 	daysFromNow,
 	describeBooking,
 	invite,
-	OFFICE_FLEET,
+	addBike,
 	PASSWORD,
-	readApiKey,
-	setFleet,
 	signUp,
 	uniqueEmail,
 } from "./helpers";
@@ -19,16 +17,14 @@ test.beforeEach(async ({ page }) => {
 	email = await signUp(page);
 });
 
-test("owners set up the fleet with the Fleet API", async ({ page }) => {
+test("owners can add bikes to the fleet", async ({ page }) => {
 	await expect(page.getByText("Your office has no bikes yet.")).toBeVisible();
 
-	await setFleet(page.request, await readApiKey(page));
+	await addBike(page, "Road 1", "road");
+	await addBike(page, "Cargo", "cargo");
 
-	await page.reload();
 	await expect(page.getByRole("row", { name: /^Road 1 / })).toBeVisible();
-	await expect(page.getByRole("button", { name: /^Book / })).toHaveCount(
-		OFFICE_FLEET.length * 2,
-	);
+	await expect(page.getByRole("button", { name: /^Book / })).toHaveCount(4);
 });
 
 test.describe("with the office fleet", () => {

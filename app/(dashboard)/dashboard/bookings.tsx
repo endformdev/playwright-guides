@@ -7,19 +7,18 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	CircleAlert,
-	Copy,
-	KeyRound,
 	type LucideIcon,
 	Package,
 	Plus,
 	Sun,
 	Sunrise,
+	Trash2,
 	X,
 	Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +27,7 @@ import type { ActionState } from "@/lib/auth/middleware";
 import {
 	addDays,
 	BIKE_TYPE_LABELS,
+	BIKE_TYPES,
 	BOOKING_SLOTS,
 	type BikeType,
 	type BookingSlot,
@@ -36,7 +36,7 @@ import {
 } from "@/lib/bike-format";
 import type { DayBooking } from "@/lib/bikes";
 import { cn } from "@/lib/utils";
-import { bookBike, cancelBooking, regenerateFleetApiKey } from "./actions";
+import { addBike, bookBike, cancelBooking, removeBike } from "./actions";
 
 const bikesUrl = (date: string) => `/dashboard?date=${date}`;
 
@@ -226,7 +226,7 @@ export function BookingGrid({
 					<p className="font-semibold">Your office has no bikes yet.</p>
 					<p className="mt-1 max-w-sm text-sm text-stone-500">
 						{isOwner
-							? "Add your bikes with the Fleet API, using the API key below."
+							? "Add your first bike below to start booking."
 							: "Ask a team owner to set up the fleet."}
 					</p>
 				</div>
@@ -480,88 +480,126 @@ export function UpcomingBookings({
 	);
 }
 
-export function FleetApiKey({ apiKey }: { apiKey: string | null }) {
+export function ManageFleet({
+	bikes,
+}: {
+	bikes: { id: number; name: string; type: BikeType }[];
+}) {
+	const formRef = useRef<HTMLFormElement>(null);
 	const [state, action, isPending] = useActionState<ActionState, FormData>(
-		regenerateFleetApiKey,
+		(previous, formData) =>
+			formData.has("bikeId")
+				? removeBike(previous, formData)
+				: addBike(previous, formData),
 		{},
 	);
-	const [origin, setOrigin] = useState("");
-	const [isCopied, setIsCopied] = useState(false);
-	useEffect(() => setOrigin(window.location.origin), []);
 
-	async function copyKey() {
-		if (!apiKey) return;
-		await navigator.clipboard.writeText(apiKey);
-		setIsCopied(true);
-		setTimeout(() => setIsCopied(false), 1500);
-	}
+	useEffect(() => {
+		if (state.success?.startsWith("Added ")) {
+			formRef.current?.reset();
+		}
+	}, [state]);
 
 	return (
 		<Card className="gap-4">
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2">
-					<KeyRound className="size-4 text-stone-400" aria-hidden="true" />
-					Fleet API
+					<Bike className="size-4 text-stone-400" aria-hidden="true" />
+					Manage fleet
 				</CardTitle>
 				<p className="text-sm text-stone-500">
-					Add, rename and remove bikes from your own tools. Send the list of
-					bikes you want, and the fleet is updated to match it.
+					Add or remove bikes in your office pool.
 				</p>
 			</CardHeader>
 			<CardContent className="space-y-4">
-				<div>
-					<Label htmlFor="fleet-api-key" className="mb-2">
-						API key
-					</Label>
-					<div className="flex gap-2">
+				<form
+					ref={formRef}
+					action={action}
+					className="flex flex-col gap-3 sm:flex-row sm:items-end"
+				>
+					<div className="flex-1">
+						<Label htmlFor="bike-name" className="mb-2">
+							Bike name
+						</Label>
 						<Input
-							id="fleet-api-key"
-							readOnly
-							value={apiKey ?? ""}
-							placeholder="No API key yet"
-							className="bg-stone-50 font-mono text-xs"
+							id="bike-name"
+							name="name"
+							placeholder="e.g. Road 1"
+							required
+							maxLength={40}
 						/>
-						{apiKey && (
-							<Button
-								type="button"
-								variant="outline"
-								onClick={copyKey}
-								className="shrink-0"
-							>
-								{isCopied ? <Check /> : <Copy />}
-								{isCopied ? "Copied" : "Copy"}
-							</Button>
-						)}
 					</div>
-				</div>
-				<pre className="overflow-x-auto rounded-lg bg-stone-900 p-4 font-mono text-xs leading-relaxed text-stone-100">
-					{`curl -X PUT ${origin}/api/fleet \\
-  -H "Authorization: Bearer ${apiKey ?? "<api key>"}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"bikes": [{"name": "Road 1", "type": "road"}]}'`}
-				</pre>
-				<p className="text-sm text-stone-500">
-					Bike types are <Code>road</Code>, <Code>city</Code>,{" "}
-					<Code>e-city</Code> and <Code>cargo</Code>.
-				</p>
-				<div className="flex flex-wrap items-center gap-3">
-					<form action={action}>
-						<Button type="submit" variant="outline" disabled={isPending}>
-							<KeyRound />
-							{apiKey ? "Generate a new key" : "Generate a key"}
-						</Button>
-					</form>
-					<ActionMessage state={isPending ? {} : state} />
-				</div>
+					<div className="sm:w-48">
+						<Label htmlFor="bike-type" className="mb-2">
+							Bike type
+						</Label>
+						<select
+							id="bike-type"
+							name="type"
+							defaultValue="road"
+							className="border-input h-9 w-full rounded-md border bg-white px-3 py-1 text-sm shadow-xs transition-colors focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none"
+						>
+							{BIKE_TYPES.map((type) => (
+								<option key={type} value={type}>
+									{BIKE_TYPE_LABELS[type]}
+								</option>
+							))}
+						</select>
+					</div>
+					<Button type="submit" disabled={isPending} className="shrink-0">
+						<Plus />
+						Add bike
+					</Button>
+				</form>
+
+				{!isPending && state.error && (
+					<div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+						<CircleAlert className="size-4 shrink-0" aria-hidden="true" />
+						<p role="alert">{state.error}</p>
+					</div>
+				)}
+				{!isPending && state.success && (
+					<div className="flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900">
+						<Check
+							className="size-4 shrink-0 text-brand-700"
+							aria-hidden="true"
+						/>
+						<p>{state.success}</p>
+					</div>
+				)}
+
+				{bikes.length > 0 && (
+					<div className="divide-y divide-stone-100 rounded-lg border border-stone-200">
+						{bikes.map((bike) => (
+							<div
+								key={bike.id}
+								className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
+							>
+								<div className="flex min-w-0 items-center gap-3">
+									<span className="truncate font-medium text-stone-900">
+										{bike.name}
+									</span>
+									<BikeTypeBadge type={bike.type} />
+								</div>
+								<form action={action} className="shrink-0">
+									<input type="hidden" name="bikeId" value={bike.id} />
+									<Button
+										type="submit"
+										variant="ghost"
+										size="icon"
+										disabled={isPending}
+										aria-label={`Remove ${bike.name}`}
+										title="Remove bike"
+										className="size-8 text-stone-400 hover:text-stone-900"
+									>
+										<Trash2 className="size-4" />
+									</Button>
+								</form>
+							</div>
+						))}
+					</div>
+				)}
 			</CardContent>
 		</Card>
-	);
-}
-
-function Code({ children }: { children: React.ReactNode }) {
-	return (
-		<code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-800">
-			{children}
-		</code>
 	);
 }

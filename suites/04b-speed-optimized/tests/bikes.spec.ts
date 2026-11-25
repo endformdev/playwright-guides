@@ -1,16 +1,10 @@
-import {
-	deleteUser,
-	OFFICE_FLEET,
-	PASSWORD,
-	setFleet,
-	uniqueEmail,
-} from "../support/api";
+import { deleteUser, PASSWORD, uniqueEmail } from "../support/api";
 import {
 	book,
 	daysFromNow,
 	describeBooking,
 	invite,
-	readApiKey,
+	addBike,
 } from "../support/actions";
 import { expect, test } from "../support/fixtures";
 
@@ -28,17 +22,15 @@ test("past days can't be booked", async ({ page }) => {
 test.describe("a team without bikes", () => {
 	test.use({ account: "new", fleet: [] });
 
-	test("owners set up the fleet with the Fleet API", async ({ page }) => {
+	test("owners can add bikes to the fleet", async ({ page }) => {
 		await page.goto("/dashboard");
 		await expect(page.getByText("Your office has no bikes yet.")).toBeVisible();
 
-		await setFleet(page.request, await readApiKey(page));
+		await addBike(page, "Road 1", "road");
+		await addBike(page, "Cargo", "cargo");
 
-		await page.reload();
 		await expect(page.getByRole("row", { name: /^Road 1 / })).toBeVisible();
-		await expect(page.getByRole("button", { name: /^Book / })).toHaveCount(
-			OFFICE_FLEET.length * 2,
-		);
+		await expect(page.getByRole("button", { name: /^Book / })).toHaveCount(4);
 	});
 });
 
