@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { hashPassword } from "@/lib/auth/session";
+import { generateApiKey } from "@/lib/bikes";
 import { db } from "@/lib/db/drizzle";
 import {
 	ActivityType,
@@ -94,6 +95,7 @@ export async function signup(
 		// Create a new team if there's no invitation
 		const newTeam: NewTeam = {
 			name: `${email}'s Team`,
+			apiKey: generateApiKey(),
 		};
 
 		[createdTeam] = await db.insert(teams).values(newTeam).returning();

@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Menu, Settings, Shield, Users } from "lucide-react";
+import { Activity, Bike, Menu, Settings, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -15,7 +15,8 @@ export default function DashboardLayout({
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
 	const navItems = [
-		{ href: "/dashboard", icon: Users, label: "Team" },
+		{ href: "/dashboard", icon: Bike, label: "Bikes" },
+		{ href: "/dashboard/team", icon: Users, label: "Team" },
 		{ href: "/dashboard/general", icon: Settings, label: "General" },
 		{ href: "/dashboard/activity", icon: Activity, label: "Activity" },
 		{ href: "/dashboard/security", icon: Shield, label: "Security" },
@@ -26,7 +27,7 @@ export default function DashboardLayout({
 			{/* Mobile header */}
 			<div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4">
 				<div className="flex items-center">
-					<span className="font-medium">Settings</span>
+					<span className="font-medium">BikeBook</span>
 				</div>
 				<Button
 					className="-mr-3"

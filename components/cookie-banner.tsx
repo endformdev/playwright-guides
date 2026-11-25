@@ -47,7 +47,7 @@ export function CookieBanner({ timing }: { timing: CookieBannerTiming }) {
 					We value your privacy
 				</h2>
 				<p className="mt-2 text-sm text-gray-700">
-					We use cookies to understand how ACME is used and to improve it.
+					We use cookies to understand how BikeBook is used and to improve it.
 				</p>
 				<div className="mt-4 flex justify-end gap-2">
 					<Button variant="outline" onClick={() => choose("essential")}>

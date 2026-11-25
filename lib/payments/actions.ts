@@ -81,7 +81,7 @@ export async function processPayment(formData: FormData) {
 			})
 			.where(eq(teams.id, userTeam[0].teamId));
 
-		redirect("/dashboard?payment=success");
+		redirect("/dashboard/team?payment=success");
 	} catch (error) {
 		if (error instanceof z.ZodError) {
 			throw new Error(error.issues.map((e) => e.message).join(", "));

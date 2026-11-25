@@ -1,7 +1,9 @@
 import { and, eq } from "drizzle-orm";
 import { signup } from "@/lib/auth/login";
 import { createSession } from "@/lib/auth/session";
+import { getApiKey } from "@/lib/bikes";
 import { db } from "@/lib/db/drizzle";
+import { getUserWithTeam } from "@/lib/db/queries";
 import { teamMembers, users } from "@/lib/db/schema";
 
 function isAuthorized(request: Request) {
@@ -37,9 +39,14 @@ export async function POST(request: Request) {
 			expiresInOneDay,
 		);
 
+		// The team's Fleet API key, so tests can set up the team's bikes.
+		const { teamId } = await getUserWithTeam(createdUser.id);
+		const apiKey = teamId ? await getApiKey(teamId) : null;
+
 		return Response.json({
 			user: createdUser,
 			session: encryptedSession,
+			team: { id: teamId, apiKey },
 		});
 	} catch (error) {
 		return Response.json(

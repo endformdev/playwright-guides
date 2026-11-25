@@ -8,9 +8,9 @@ import { getTeamForUser, getUser } from "@/lib/db/queries";
 import { getCookieBannerTiming, getDemoProfile } from "@/lib/demo-profile";
 
 export const metadata: Metadata = {
-	title: "ACME",
+	title: "BikeBook",
 	description:
-		"A demo SaaS application used throughout Endform's Playwright guides.",
+		"Book bikes from your office's bike pool. The demo app behind Endform's Playwright guides.",
 };
 
 export const viewport: Viewport = {

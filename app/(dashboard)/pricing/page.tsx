@@ -8,11 +8,7 @@ const PLANS = [
 		price: 800, // $8.00 in cents
 		interval: "month",
 		trialDays: 7,
-		features: [
-			"Unlimited Usage",
-			"Unlimited Workspace Members",
-			"Email Support",
-		],
+		features: ["Unlimited bookings", "Unlimited team members", "Email support"],
 	},
 	{
 		name: "Plus",
@@ -21,8 +17,8 @@ const PLANS = [
 		trialDays: 7,
 		features: [
 			"Everything in Base, and:",
-			"Early Access to New Features",
-			"24/7 Support + Slack Access",
+			"Early access to new features",
+			"24/7 support + Slack access",
 		],
 	},
 ];
@@ -35,7 +31,7 @@ export default function PricingPage() {
 					Choose Your Plan
 				</h1>
 				<p className="text-xl text-gray-600">
-					Simple pricing for teams of all sizes
+					Simple pricing for offices of all sizes
 				</p>
 				<div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-md p-4 max-w-2xl mx-auto">
 					<p className="text-yellow-800 text-sm">

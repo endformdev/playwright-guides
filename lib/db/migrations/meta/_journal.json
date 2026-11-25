@@ -15,6 +15,13 @@
 			"when": 1757329816216,
 			"tag": "0001_heavy_mentor",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "6",
+			"when": 1795602817811,
+			"tag": "0002_bike_bookings",
+			"breakpoints": true
 		}
 	]
 }

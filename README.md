@@ -2,7 +2,7 @@
 
 The example SaaS application and Playwright suites behind [Endform](https://endform.dev)'s guides.
 
-It is a small but realistic SaaS app (sign up, teams, invitations, a pricing and checkout flow, and an activity log) with a set of progressively more advanced Playwright suites written against it. The app runs with zero setup: no database or auth environment variables are needed.
+It is BikeBook, a small but realistic SaaS app for booking bikes from an office bike pool, with a set of progressively more advanced Playwright suites written against it. Next to the booking itself it has everything a SaaS app has: sign up, teams, invitations, a pricing and checkout flow, and an activity log. The app runs with zero setup: no database or auth environment variables are needed.
 
 ## Repository layout
 
@@ -35,6 +35,23 @@ pnpm db:setup
 pnpm db:seed
 ```
 
+## Bikes and the Fleet API
+
+Each team books from its own fleet on `/dashboard`: every bike has a morning and an afternoon slot per day, and a slot can only be booked once. Members can cancel their own bookings; owners can cancel anyone's.
+
+New teams start without bikes. Owners set up the fleet with the Fleet API, using the team's API key from the bikes page:
+
+```bash
+curl -X PUT http://localhost:3000/api/fleet \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"bikes": [{"name": "Road 1", "type": "road"}, {"name": "Cargo", "type": "cargo"}]}'
+```
+
+The fleet is made to match the list. Bikes are matched by name, so listed bikes keep their bookings and bikes that aren't listed are removed with theirs. Bike types are `road`, `city`, `e-city` and `cargo`. `GET /api/fleet` returns the current fleet.
+
+In tests, `POST /api/internal/user` returns the new team's API key as `team.apiKey`, so a test can create a user and give its team a fleet without touching the UI.
+
 ## Demo profiles
 
 The same app is deployed three times, differing only in the `DEMO_PROFILE` environment variable:
@@ -42,7 +59,7 @@ The same app is deployed three times, differing only in the `DEMO_PROFILE` envir
 | Profile           | Behaviour                                                                                                                                                                                                                                   |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `clean` (default) | A fast, well-behaved app.                                                                                                                                                                                                                   |
-| `slow`            | Slow sign-ups (a third-party risk check), slow sign-ins, a slow activity query, and a payment provider that takes about 2s per charge and only handles 2 charges at a time per server.                                                      |
+| `slow`            | Slow sign-ups (a third-party risk check), slow sign-ins, a slow activity query, slow bookings, and a payment provider that takes about 2s per charge and only handles 2 charges at a time per server.                                       |
 | `flaky`           | A team cache that occasionally lags behind writes, transient 503s from the team API and the invitation email provider, a settings form that re-syncs over typed input, unstable ordering of same-second activity, and a late cookie dialog. |
 
 Every profile-specific behaviour lives in [`lib/demo-profile.ts`](lib/demo-profile.ts) and [`components/demo-profile-provider.tsx`](components/demo-profile-provider.tsx), so the rest of the app reads like a normal SaaS codebase. Run a profile locally with:
@@ -55,14 +72,14 @@ DEMO_PROFILE=flaky pnpm dev
 
 Each folder in [`suites/`](suites) is a self-contained Playwright suite and a pnpm workspace package, with its own `package.json` and `playwright.config.ts`. Endform identifies a suite by the folder of its `package.json`, so each folder is its own Endform suite. `pnpm install` at the root installs them all.
 
-| Suite                                                   | Tests | App     | What it shows                                                                                                                                    |
-| ------------------------------------------------------- | ----: | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`01-base-setup`](suites/01-base-setup)                 |     1 | `clean` | A minimal config and one smoke test.                                                                                                             |
-| [`02-first-10-tests`](suites/02-first-10-tests)         |    10 | `clean` | Ten readable tests with a few plain helper functions.                                                                                            |
-| [`03-scaled-suite`](suites/03-scaled-suite)             |    69 | `clean` | Fixtures, page objects, a shared signed-in user from global setup, per-test users for tests that change data, and signed-in/signed-out projects. |
-| [`04a-speed-unoptimized`](suites/04a-speed-unoptimized) |    20 | `slow`  | Every test signs up through the UI, and files run serially.                                                                                      |
-| [`04b-speed-optimized`](suites/04b-speed-optimized)     |    20 | `slow`  | The same tests, fully parallel, with users from the API, and a concurrency limit for payment tests in `endform.config.ts`.                       |
-| [`05-flake-lab`](suites/05-flake-lab)                   |    12 | `flaky` | Tests written as natural-language steps. Six are robust; six flake from the flaky app or from common flaky patterns in the test code.            |
+| Suite                                                   | Tests | App     | What it shows                                                                                                                                                                       |
+| ------------------------------------------------------- | ----: | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`01-base-setup`](suites/01-base-setup)                 |     1 | `clean` | A minimal config and one smoke test: sign up and land on an empty office.                                                                                                           |
+| [`02-first-10-tests`](suites/02-first-10-tests)         |    10 | `clean` | Ten readable tests with a few plain helpers, including one that gives a new team its bikes through the Fleet API.                                                                   |
+| [`03-scaled-suite`](suites/03-scaled-suite)             |   102 | `clean` | Fixtures, a shared signed-in user from global setup, per-test users (with their fleet from the Fleet API) for tests that change data, API tests, and signed-in/signed-out projects. |
+| [`04a-speed-unoptimized`](suites/04a-speed-unoptimized) |    20 | `slow`  | Every test signs up through the UI and reads the Fleet API key off the page, and files run serially.                                                                                |
+| [`04b-speed-optimized`](suites/04b-speed-optimized)     |    20 | `slow`  | The same tests, fully parallel, with users and bike fleets from the API, and a concurrency limit for payment tests in `endform.config.ts`.                                          |
+| [`05-flake-lab`](suites/05-flake-lab)                   |    12 | `flaky` | Tests written as natural-language steps. Six are robust; six flake from the flaky app or from common flaky patterns in the test code.                                               |
 
 Run a suite against your local app:
 

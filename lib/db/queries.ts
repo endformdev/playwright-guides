@@ -86,6 +86,7 @@ export async function getActivityLogs() {
 		.select({
 			id: activityLogs.id,
 			action: activityLogs.action,
+			detail: activityLogs.detail,
 			timestamp: activityLogs.timestamp,
 			ipAddress: activityLogs.ipAddress,
 			userName: users.name,
@@ -116,6 +117,8 @@ async function loadTeamForUser(userId: number) {
 		where: eq(teamMembers.userId, userId),
 		with: {
 			team: {
+				// The API key is only shown to owners, on the bikes page.
+				columns: { apiKey: false },
 				with: {
 					teamMembers: {
 						with: {

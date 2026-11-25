@@ -119,7 +119,7 @@ Enforce it in the server actions (`app/(login)/actions.ts`):
 +		}
 ```
 
-Base the UI on the same role (`app/(dashboard)/dashboard/page.tsx`):
+Base the UI on the same role (`app/(dashboard)/dashboard/team/page.tsx`):
 
 ```diff
 +function useIsTeamOwner() {
@@ -195,7 +195,7 @@ test("owners can't remove themselves", async ({ teamPage, user }) => {
  });
 ```
 
-And in `app/(dashboard)/dashboard/page.tsx`:
+And in `app/(dashboard)/dashboard/team/page.tsx`:
 
 ```diff
  function TeamMembers() {

@@ -10,6 +10,7 @@ export async function logActivity(
 	userId: number,
 	type: ActivityType,
 	ipAddress?: string,
+	detail?: string,
 ) {
 	if (teamId === null || teamId === undefined) {
 		return;
@@ -19,6 +20,7 @@ export async function logActivity(
 		userId,
 		action: type,
 		ipAddress: ipAddress || "",
+		detail,
 	};
 	await db.insert(activityLogs).values(newActivity);
 }

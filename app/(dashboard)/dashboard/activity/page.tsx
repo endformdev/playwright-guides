@@ -1,5 +1,7 @@
 import {
 	AlertCircle,
+	Bike,
+	CalendarX,
 	CheckCircle,
 	Lock,
 	LogOut,
@@ -25,6 +27,8 @@ const iconMap: Record<ActivityType, LucideIcon> = {
 	[ActivityType.REMOVE_TEAM_MEMBER]: UserMinus,
 	[ActivityType.INVITE_TEAM_MEMBER]: Mail,
 	[ActivityType.ACCEPT_INVITATION]: CheckCircle,
+	[ActivityType.BOOK_BIKE]: Bike,
+	[ActivityType.CANCEL_BOOKING]: CalendarX,
 };
 
 function getRelativeTime(date: Date) {
@@ -63,6 +67,10 @@ function formatAction(action: ActivityType): string {
 			return "You invited a team member";
 		case ActivityType.ACCEPT_INVITATION:
 			return "You accepted an invitation";
+		case ActivityType.BOOK_BIKE:
+			return "You booked";
+		case ActivityType.CANCEL_BOOKING:
+			return "You cancelled";
 		default:
 			return "Unknown action occurred";
 	}
@@ -97,6 +105,7 @@ export default async function ActivityPage() {
 										<div className="flex-1">
 											<p className="text-sm font-medium text-gray-900">
 												{formattedAction}
+												{log.detail && ` ${log.detail}`}
 												{log.ipAddress && ` from IP ${log.ipAddress}`}
 											</p>
 											<p className="text-xs text-gray-500">

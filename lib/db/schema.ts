@@ -1,5 +1,19 @@
 import { relations } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+	index,
+	integer,
+	sqliteTable,
+	text,
+	uniqueIndex,
+} from "drizzle-orm/sqlite-core";
+import { BIKE_TYPES, BOOKING_SLOTS } from "../bike-format";
+
+export {
+	BIKE_TYPES,
+	type BikeType,
+	BOOKING_SLOTS,
+	type BookingSlot,
+} from "../bike-format";
 
 export const users = sqliteTable("users", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
@@ -27,6 +41,8 @@ export const teams = sqliteTable("teams", {
 		.$defaultFn(() => new Date()),
 	planName: text("plan_name"),
 	subscriptionStatus: text("subscription_status"),
+	/** Authenticates calls to the Fleet API. Only owners can see it. */
+	apiKey: text("api_key").unique(),
 });
 
 export const teamMembers = sqliteTable("team_members", {
@@ -52,6 +68,8 @@ export const activityLogs = sqliteTable("activity_logs", {
 		onDelete: "cascade",
 	}),
 	action: text("action").notNull(),
+	/** What the action was about, e.g. "Road 1, Thu 27 Nov, morning". */
+	detail: text("detail"),
 	timestamp: integer("timestamp", { mode: "timestamp" })
 		.notNull()
 		.$defaultFn(() => new Date()),
@@ -96,11 +114,61 @@ export const payments = sqliteTable("payments", {
 		.$defaultFn(() => new Date()),
 });
 
+export const bikes = sqliteTable(
+	"bikes",
+	{
+		id: integer("id").primaryKey({ autoIncrement: true }),
+		teamId: integer("team_id")
+			.notNull()
+			.references(() => teams.id),
+		name: text("name").notNull(),
+		type: text("type", { enum: BIKE_TYPES }).notNull(),
+		createdAt: integer("created_at", { mode: "timestamp" })
+			.notNull()
+			.$defaultFn(() => new Date()),
+	},
+	(table) => [
+		uniqueIndex("bikes_team_name_unique").on(table.teamId, table.name),
+	],
+);
+
+export const bookings = sqliteTable(
+	"bookings",
+	{
+		id: integer("id").primaryKey({ autoIncrement: true }),
+		teamId: integer("team_id")
+			.notNull()
+			.references(() => teams.id),
+		bikeId: integer("bike_id")
+			.notNull()
+			.references(() => bikes.id, { onDelete: "cascade" }),
+		userId: integer("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		/** The day of the booking, as YYYY-MM-DD. */
+		date: text("date").notNull(),
+		slot: text("slot", { enum: BOOKING_SLOTS }).notNull(),
+		createdAt: integer("created_at", { mode: "timestamp" })
+			.notNull()
+			.$defaultFn(() => new Date()),
+	},
+	(table) => [
+		// A bike can only be booked once per slot.
+		uniqueIndex("bookings_bike_date_slot_unique").on(
+			table.bikeId,
+			table.date,
+			table.slot,
+		),
+		index("bookings_team_date_idx").on(table.teamId, table.date),
+	],
+);
+
 export const teamsRelations = relations(teams, ({ many }) => ({
 	teamMembers: many(teamMembers),
 	activityLogs: many(activityLogs),
 	invitations: many(invitations),
 	payments: many(payments),
+	bikes: many(bikes),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -148,6 +216,25 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
 	}),
 }));
 
+export const bikesRelations = relations(bikes, ({ one, many }) => ({
+	team: one(teams, {
+		fields: [bikes.teamId],
+		references: [teams.id],
+	}),
+	bookings: many(bookings),
+}));
+
+export const bookingsRelations = relations(bookings, ({ one }) => ({
+	bike: one(bikes, {
+		fields: [bookings.bikeId],
+		references: [bikes.id],
+	}),
+	user: one(users, {
+		fields: [bookings.userId],
+		references: [users.id],
+	}),
+}));
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Team = typeof teams.$inferSelect;
@@ -160,7 +247,11 @@ export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
 export type Payment = typeof payments.$inferSelect;
 export type NewPayment = typeof payments.$inferInsert;
-export type TeamDataWithMembers = Team & {
+export type Bike = typeof bikes.$inferSelect;
+export type NewBike = typeof bikes.$inferInsert;
+export type Booking = typeof bookings.$inferSelect;
+export type NewBooking = typeof bookings.$inferInsert;
+export type TeamDataWithMembers = Omit<Team, "apiKey"> & {
 	teamMembers: (TeamMember & {
 		user: Pick<User, "id" | "name" | "email">;
 	})[];
@@ -177,4 +268,6 @@ export enum ActivityType {
 	REMOVE_TEAM_MEMBER = "REMOVE_TEAM_MEMBER",
 	INVITE_TEAM_MEMBER = "INVITE_TEAM_MEMBER",
 	ACCEPT_INVITATION = "ACCEPT_INVITATION",
+	BOOK_BIKE = "BOOK_BIKE",
+	CANCEL_BOOKING = "CANCEL_BOOKING",
 }

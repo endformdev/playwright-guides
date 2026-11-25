@@ -6,7 +6,8 @@ import "server-only";
  *
  * - `clean` (default): a fast, well-behaved app.
  * - `slow`: realistic performance bottlenecks (slow sign-ups, a slow activity
- *   query, and a payment provider that only handles a few charges at a time).
+ *   query, slow bookings, and a payment provider that only handles a few
+ *   charges at a time).
  *   Used by the speed guides.
  * - `flaky`: realistic intermittent failure modes (transient 503s, a lagging
  *   cache, a late cookie banner, and activity entries whose order isn't
@@ -34,6 +35,8 @@ const slowLatencyMs = {
 	activityLog: 1200,
 	/** Loading the team with all of its members. */
 	team: 400,
+	/** Confirming a booking with the bike lock service. */
+	booking: 1000,
 } as const;
 
 /** Adds the latency an operation has under the `slow` profile. */
