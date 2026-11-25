@@ -232,17 +232,18 @@ export function BookingGrid({
 				</div>
 			) : (
 				<div className="overflow-x-auto">
-					<table className="w-full text-sm">
+					{/* Fixed columns, so a long name is cut short instead of widening its slot. */}
+					<table className="w-full table-fixed text-sm">
 						<thead>
 							<tr className="text-left text-xs font-medium tracking-wide text-stone-500 uppercase">
-								<th className="px-5 py-3 font-medium">Bike</th>
-								<th className="hidden px-3 py-3 font-medium sm:table-cell">
+								<th className="w-28 px-5 py-3 font-medium sm:w-32">Bike</th>
+								<th className="hidden w-44 px-3 py-3 font-medium sm:table-cell">
 									Type
 								</th>
 								{BOOKING_SLOTS.map((slot) => {
 									const Icon = SLOT_ICONS[slot];
 									return (
-										<th key={slot} className="w-[30%] px-3 py-3 font-medium">
+										<th key={slot} className="px-3 py-3 font-medium">
 											<span className="inline-flex items-center gap-1.5">
 												<Icon className="size-3.5" aria-hidden="true" />
 												{SLOT_LABELS[slot]}
