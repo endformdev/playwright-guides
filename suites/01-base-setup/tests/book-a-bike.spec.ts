@@ -11,9 +11,7 @@ test("a new user can sign up, add a bike, and book it", async ({
 		email,
 		password: "testpassword123",
 	});
-	await ai.do("add a road bike named {name} to the fleet", {
-		name: "Road 1",
-	});
+	await ai.do("add a road bike named Road 1 to the fleet");
 	await ai.do("book Road 1 for the morning");
 
 	await expect(page.getByRole("status")).toContainText("Booked Road 1");
