@@ -1,11 +1,9 @@
 // intent: "invite {email} to the team as a member"
-// test: "an invited teammate can book from the team's bikes"
+// test: "team invites > an invited teammate can join the team and book a bike"
 import type { StepContext } from "playwright-intent";
 
 export default async function ({
 	page,
-	context,
-	request,
 	expect,
 	vars,
 }: StepContext): Promise<void> {

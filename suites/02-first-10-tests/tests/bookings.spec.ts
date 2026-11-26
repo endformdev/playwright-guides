@@ -1,51 +1,36 @@
-import { expect, test } from "playwright-intent";
-import { addOfficeFleet, nextWeek, PASSWORD, uniqueEmail } from "./helpers";
+import { expect, test } from "./fixtures";
+import { addBike, nextWeek } from "./helpers";
 
-test.beforeEach(async ({ page, ai }) => {
-	await page.goto("/sign-up");
-	await ai.do("sign up with email {email} and password {password}", {
-		email: uniqueEmail(),
-		password: PASSWORD,
-	});
-	await addOfficeFleet(page);
-});
-
-test("the office's bikes are listed with their type", async ({ page }) => {
-	const rows = page.getByRole("row");
-
-	// A header row, then one row per bike in the order they were added.
-	await expect(rows).toHaveCount(5);
-	await expect(rows.nth(1)).toContainText("Road 1");
-	await expect(rows.nth(1)).toContainText("Road bike");
-	await expect(rows.nth(4)).toContainText("Cargo bike");
-});
+test.use({ signedIn: true });
 
 test("users can book a bike and see it in their upcoming bookings", async ({
 	page,
+	ai,
 }) => {
 	await page.goto(`/dashboard?date=${nextWeek()}`);
+	await addBike(page, "Road 1", "road");
+	await ai.do("book Road 1 for the morning");
 
-	await page.getByRole("button", { name: "Book E-City 2 morning" }).click();
-
-	await expect(page.getByRole("status")).toContainText("Booked E-City 2");
-	await expect(page.getByRole("row", { name: /E-City 2/ })).toContainText(
+	await expect(page.getByRole("status")).toContainText("Booked Road 1");
+	await expect(page.getByRole("row", { name: /Road 1/ })).toContainText(
 		"Booked by you",
 	);
 	await expect(
-		page.getByRole("listitem").filter({ hasText: "E-City 2" }),
+		page.getByRole("listitem").filter({ hasText: "Road 1" }),
 	).toContainText("morning");
 
 	await page.getByRole("link", { name: "Activity" }).click();
-	await expect(page.getByText(/You booked E-City 2/)).toBeVisible();
+	await expect(page.getByText(/You booked Road 1/)).toBeVisible();
 });
 
-test("cancelling a booking frees the bike again", async ({ page }) => {
+test("cancelling a booking frees the slot again", async ({ page }) => {
 	await page.goto(`/dashboard?date=${nextWeek()}`);
+	await addBike(page, "Cargo", "cargo");
+
 	await page.getByRole("button", { name: "Book Cargo afternoon" }).click();
 	await expect(page.getByRole("status")).toContainText("Booked Cargo");
 
 	await page.getByRole("button", { name: "Cancel Cargo afternoon" }).click();
-
 	await expect(page.getByRole("status")).toContainText("Cancelled Cargo");
 	await expect(
 		page.getByRole("button", { name: "Book Cargo afternoon" }),
@@ -59,6 +44,7 @@ test("a bike can't be booked twice for the same slot", async ({
 }) => {
 	const day = `/dashboard?date=${nextWeek()}`;
 	await page.goto(day);
+	await addBike(page, "Road 1", "road");
 
 	// A second browser, signed in as the same user, opens the same day.
 	const otherContext = await browser.newContext({

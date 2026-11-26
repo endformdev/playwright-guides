@@ -1,0 +1,46 @@
+import { expect, test } from "./fixtures";
+import { addBike, nextWeek } from "./helpers";
+
+test.use({ signedIn: true });
+
+test("owners can add bikes and see them listed with their type", async ({
+	page,
+	ai,
+}) => {
+	await page.goto("/dashboard");
+	await ai.do("add a road bike named Road 1 to the fleet");
+	await addBike(page, "Cargo", "cargo");
+
+	const rows = page.getByRole("row");
+	await expect(rows).toHaveCount(3);
+	await expect(rows.nth(1)).toContainText("Road 1");
+	await expect(rows.nth(1)).toContainText("Road bike");
+	await expect(rows.nth(2)).toContainText("Cargo");
+	await expect(rows.nth(2)).toContainText("Cargo bike");
+});
+
+test("removing a bike removes it and its bookings", async ({ page }) => {
+	await page.goto(`/dashboard?date=${nextWeek()}`);
+	await addBike(page, "Cargo", "cargo");
+
+	await page.getByRole("button", { name: "Book Cargo morning" }).click();
+	await expect(page.getByRole("status")).toContainText("Booked Cargo");
+
+	await page.getByRole("button", { name: "Remove Cargo" }).click();
+	await expect(
+		page.getByRole("rowheader", { name: "Cargo", exact: true }),
+	).toHaveCount(0);
+	await expect(page.getByText("No upcoming bookings.")).toBeVisible();
+});
+
+test("duplicate bike names are rejected", async ({ page }) => {
+	await page.goto("/dashboard");
+	await addBike(page, "Road 1", "road");
+
+	await page.getByRole("textbox", { name: "Bike name" }).fill("Road 1");
+	await page.getByRole("button", { name: "Add bike" }).click();
+
+	await expect(
+		page.getByText("A bike named Road 1 is already in your fleet"),
+	).toBeVisible();
+});
