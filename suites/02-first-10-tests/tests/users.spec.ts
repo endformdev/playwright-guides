@@ -43,30 +43,26 @@ test("users can sign in and sign out", async ({ page, ai }) => {
 	await expect(page.getByRole("heading", { name: "Bikes" })).toBeVisible();
 });
 
-test("signing in with the wrong password shows an error", async ({
-	page,
-	ai,
-}) => {
-	const email = uniqueEmail();
+testWithNewUser(
+	"deleting an account signs the user out and blocks signing back in",
+	async ({ page, newUser, ai }) => {
+		await page.goto("/dashboard/security");
 
-	await page.goto("/sign-up");
-	await ai.do("sign up with email {email} and password {password}", {
-		email,
-		password: PASSWORD,
-	});
-	await ai.do("sign out from the user menu");
+		await page
+			.getByRole("textbox", { name: "Confirm Password" })
+			.fill(newUser.password);
+		await page.getByRole("button", { name: "Delete Account" }).click();
+		await expect(page).toHaveURL("/sign-in");
 
-	await page.goto("/sign-in");
-	await ai.do("sign in with email {email} and password {password}", {
-		email,
-		password: "not-the-password",
-	});
-
-	await expect(
-		page.getByText("Invalid email or password. Please try again."),
-	).toBeVisible();
-	await expect(page).toHaveURL("/sign-in");
-});
+		await ai.do("sign in with email {email} and password {password}", {
+			email: newUser.email,
+			password: newUser.password,
+		});
+		await expect(
+			page.getByText("Invalid email or password. Please try again."),
+		).toBeVisible();
+	},
+);
 
 testWithNewUser(
 	"an invited teammate can join the team and book a bike",
