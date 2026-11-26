@@ -8,6 +8,12 @@ import { getUser } from "@/lib/db/queries";
 import { payments, teamMembers, teams } from "@/lib/db/schema";
 import { chargeWithPaymentProvider } from "@/lib/demo-profile";
 
+// Plans are identified by their id everywhere except on the pricing page.
+const PLANS_BY_ID: Record<string, { name: string; price: number }> = {
+	base: { name: "Base", price: 800 },
+	plus: { name: "Plus", price: 1200 },
+};
+
 const paymentSchema = z.object({
 	cardNumber: z
 		.string()
@@ -65,6 +71,10 @@ export async function processPayment(formData: FormData) {
 
 	try {
 		const validatedData = paymentSchema.parse(data);
+		const plan = PLANS_BY_ID[validatedData.planName];
+		if (!plan) {
+			throw new Error(`Unknown plan: ${validatedData.planName}`);
+		}
 		await chargeWithPaymentProvider();
 
 		await db.insert(payments).values({
@@ -75,7 +85,7 @@ export async function processPayment(formData: FormData) {
 		await db
 			.update(teams)
 			.set({
-				planName: validatedData.planName,
+				planName: plan.name,
 				subscriptionStatus: "active",
 				updatedAt: new Date(),
 			})
