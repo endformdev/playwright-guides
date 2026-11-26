@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "../../support/fixtures";
+import { expect, type Page, testWithNewUser } from "../../support/fixtures";
 
 const VALID_PAYMENT = {
 	cardHolderName: "Ada Lovelace",
@@ -49,7 +49,7 @@ for (const { plan, price } of [
 	{ plan: "Base", price: "$8/month" },
 	{ plan: "Plus", price: "$12/month" },
 ] as const) {
-	test(`checkout summarises the ${plan} plan`, async ({ page }) => {
+	testWithNewUser(`checkout summarises the ${plan} plan`, async ({ page }) => {
 		await openCheckout(page, plan);
 
 		await expect(
@@ -61,37 +61,39 @@ for (const { plan, price } of [
 	});
 }
 
-test.describe("upgrading", () => {
-	test.use({ account: "new" });
+testWithNewUser.describe("upgrading", () => {
+	testWithNewUser(
+		"upgrading to Base starts a monthly subscription",
+		async ({ page, ai }) => {
+			await page.goto("/pricing");
+			await ai.do(
+				"choose the Base plan and complete checkout with a valid card",
+			);
 
-	test("upgrading to Base starts a monthly subscription", async ({
-		page,
-		ai,
-	}) => {
-		await page.goto("/pricing");
-		await ai.do("choose the Base plan and complete checkout with a valid card");
+			await expect(page).toHaveURL("/dashboard/team?payment=success");
+			await expect(page.getByText("Current Plan: Base")).toBeVisible();
+			await expect(page.getByText("Billed monthly")).toBeVisible();
+		},
+	);
 
-		await expect(page).toHaveURL("/dashboard/team?payment=success");
-		await expect(page.getByText("Current Plan: Base")).toBeVisible();
-		await expect(page.getByText("Billed monthly")).toBeVisible();
-	});
+	testWithNewUser(
+		"upgrading to Plus records exactly one payment",
+		async ({ page, ai }) => {
+			await page.goto("/pricing");
+			await ai.do(
+				"choose the Plus plan and complete checkout with a valid card",
+			);
 
-	test("upgrading to Plus records exactly one payment", async ({
-		page,
-		ai,
-	}) => {
-		await page.goto("/pricing");
-		await ai.do("choose the Plus plan and complete checkout with a valid card");
-
-		await expect(page).toHaveURL("/dashboard/team?payment=success");
-		const payments = await (await page.request.get("/api/payment")).json();
-		expect(payments).toHaveLength(1);
-		expect(payments[0]).toMatchObject({
-			planName: "Plus",
-			amount: 1200,
-			currency: "USD",
-		});
-	});
+			await expect(page).toHaveURL("/dashboard/team?payment=success");
+			const payments = await (await page.request.get("/api/payment")).json();
+			expect(payments).toHaveLength(1);
+			expect(payments[0]).toMatchObject({
+				planName: "Plus",
+				amount: 1200,
+				currency: "USD",
+			});
+		},
+	);
 });
 
 const invalidFields = [
@@ -105,15 +107,18 @@ const invalidFields = [
 ] as const;
 
 for (const { field, value, reason } of invalidFields) {
-	test(`a ${field} that is ${reason} can't be submitted`, async ({ page }) => {
-		await openCheckout(page, "Plus");
-		await fillCheckout(page, { [field]: value });
+	testWithNewUser(
+		`a ${field} that is ${reason} can't be submitted`,
+		async ({ page }) => {
+			await openCheckout(page, "Plus");
+			await fillCheckout(page, { [field]: value });
 
-		await page.getByRole("button", { name: /Complete Purchase/ }).click();
+			await page.getByRole("button", { name: /Complete Purchase/ }).click();
 
-		await expect(
-			page.getByRole("textbox", { name: PAYMENT_LABELS[field] }),
-		).toHaveJSProperty("validity.valid", false);
-		await expect(page).toHaveURL(/\/pricing\/checkout/);
-	});
+			await expect(
+				page.getByRole("textbox", { name: PAYMENT_LABELS[field] }),
+			).toHaveJSProperty("validity.valid", false);
+			await expect(page).toHaveURL(/\/pricing\/checkout/);
+		},
+	);
 }

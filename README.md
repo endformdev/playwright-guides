@@ -72,14 +72,14 @@ DEMO_PROFILE=flaky pnpm dev
 
 Each folder in [`suites/`](suites) is a self-contained Playwright suite and a pnpm workspace package, with its own `package.json` and `playwright.config.ts`. Endform identifies a suite by the folder of its `package.json`, so each folder is its own Endform suite. `pnpm install` at the root installs them all.
 
-| Suite                                                   | Tests | App     | What it shows                                                                                                                                                                       |
-| ------------------------------------------------------- | ----: | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`01-base-setup`](suites/01-base-setup)                 |     1 | `clean` | A minimal config and one smoke test: sign up and land on an empty office.                                                                                                           |
-| [`02-first-10-tests`](suites/02-first-10-tests)         |    10 | `clean` | Ten tests across user management and auth, fleet management, and bookability, using a programmatic user fixture so only the two auth tests go through the sign-up or sign-in UI.    |
-| [`03-scaled-suite`](suites/03-scaled-suite)             |   102 | `clean` | Fixtures, a shared signed-in user from global setup, per-test users (with their fleet from the Fleet API) for tests that change data, API tests, and signed-in/signed-out projects. |
-| [`04a-speed-unoptimized`](suites/04a-speed-unoptimized) |    20 | `slow`  | Every test signs up through the UI and reads the Fleet API key off the page, and files run serially.                                                                                |
-| [`04b-speed-optimized`](suites/04b-speed-optimized)     |    20 | `slow`  | The same tests, fully parallel, with users and bike fleets from the API, and a concurrency limit for payment tests in `endform.config.ts`.                                          |
-| [`05-flake-lab`](suites/05-flake-lab)                   |    12 | `flaky` | Tests written as natural-language steps. Six are robust; six flake from the flaky app or from common flaky patterns in the test code.                                               |
+| Suite                                                   | Tests | App     | What it shows                                                                                                                                                                      |
+| ------------------------------------------------------- | ----: | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`01-base-setup`](suites/01-base-setup)                 |     1 | `clean` | A minimal config and one smoke test: sign up and land on an empty office.                                                                                                          |
+| [`02-first-10-tests`](suites/02-first-10-tests)         |    10 | `clean` | Ten tests across user management and auth, fleet management, and bookability, using a programmatic user fixture so only the two auth tests go through the sign-up or sign-in UI.   |
+| [`03-scaled-suite`](suites/03-scaled-suite)             |   103 | `clean` | Every signed-in test starts from its own user (`testWithNewUser`) and adds only the bikes and teammates it needs through `fleet` and `team` fixtures, plus request-only API tests. |
+| [`04a-speed-unoptimized`](suites/04a-speed-unoptimized) |    20 | `slow`  | Every test signs up through the UI and reads the Fleet API key off the page, and files run serially.                                                                               |
+| [`04b-speed-optimized`](suites/04b-speed-optimized)     |    20 | `slow`  | The same tests, fully parallel, with users and bike fleets from the API, and a concurrency limit for payment tests in `endform.config.ts`.                                         |
+| [`05-flake-lab`](suites/05-flake-lab)                   |    12 | `flaky` | Tests written as natural-language steps. Six are robust; six flake from the flaky app or from common flaky patterns in the test code.                                              |
 
 Run a suite against your local app:
 
