@@ -35,7 +35,7 @@ test("submitting a checkout while signed out asks you to sign in", async ({
 	ai,
 }) => {
 	await page.goto("/pricing");
-	await ai.do("choose the Plus plan and submit checkout with a valid card");
+	await ai.do("choose the Pro plan and submit checkout with a valid card");
 
 	await expect(page).toHaveURL(/\/sign-in/);
 });

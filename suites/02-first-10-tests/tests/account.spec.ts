@@ -37,7 +37,7 @@ test("an invited teammate can book from the team's bikes", async ({
 	await expect(page.getByRole("status")).toContainText("Booked City 1");
 });
 
-test("users can upgrade from Free to the Plus plan", async ({ page, ai }) => {
+test("users can upgrade from Free to the Pro plan", async ({ page, ai }) => {
 	await page.goto("/sign-up");
 	await ai.do("sign up with email {email} and password {password}", {
 		email: uniqueEmail(),
@@ -46,8 +46,8 @@ test("users can upgrade from Free to the Plus plan", async ({ page, ai }) => {
 	await page.getByRole("link", { name: "Team" }).click();
 	await expect(page.getByText("Current Plan: Free")).toBeVisible();
 
-	await ai.do("choose the Plus plan and complete checkout with a valid card");
+	await ai.do("choose the Pro plan and complete checkout with a valid card");
 
 	await expect(page).toHaveURL("/dashboard/team?payment=success");
-	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
+	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
 });

@@ -12,8 +12,8 @@ const PLANS = [
 		features: ["Unlimited bookings", "Unlimited team members", "Email support"],
 	},
 	{
-		name: "Plus",
-		price: 1200, // $12.00 in cents
+		name: "Pro",
+		price: 1500, // $15.00 in cents
 		interval: "month",
 		trialDays: 7,
 		features: [

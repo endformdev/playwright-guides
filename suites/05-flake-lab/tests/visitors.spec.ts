@@ -7,7 +7,7 @@ test("a visitor compares the plans", async ({ page }) => {
 
 	await test.step("See both plans with their monthly price", async () => {
 		await expect(page.getByText("$8 per user / month")).toBeVisible();
-		await expect(page.getByText("$12 per user / month")).toBeVisible();
+		await expect(page.getByText("$15 per user / month")).toBeVisible();
 	});
 });
 

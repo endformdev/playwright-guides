@@ -12,20 +12,20 @@ test("upgrading to Base starts a subscription", async ({ page }) => {
 	await expect(page.getByText("Billed monthly")).toBeVisible();
 });
 
-test("upgrading to Plus records exactly one payment", async ({ page }) => {
-	await purchase(page, "Plus");
+test("upgrading to Pro records exactly one payment", async ({ page }) => {
+	await purchase(page, "Pro");
 
-	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
+	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
 	const payments = await (await page.request.get("/api/payment")).json();
 	expect(payments).toHaveLength(1);
-	expect(payments[0]).toMatchObject({ planName: "Plus", amount: 1200 });
+	expect(payments[0]).toMatchObject({ planName: "Pro", amount: 1500 });
 });
 
-test("switching from Base to Plus records both payments", async ({ page }) => {
+test("switching from Base to Pro records both payments", async ({ page }) => {
 	await purchase(page, "Base");
-	await purchase(page, "Plus");
+	await purchase(page, "Pro");
 
-	await expect(page.getByText("Current Plan: Plus")).toBeVisible();
+	await expect(page.getByText("Current Plan: Pro")).toBeVisible();
 	const payments = await (await page.request.get("/api/payment")).json();
 	expect(payments).toHaveLength(2);
 });
@@ -41,15 +41,15 @@ test("pricing lists both plans", async ({ page }) => {
 });
 
 test("checkout summarises the chosen plan", async ({ page }) => {
-	await page.goto("/pricing/checkout?plan=Plus&amount=1200");
+	await page.goto("/pricing/checkout?plan=Pro&amount=1500");
 
 	await expect(
-		page.getByText("You are purchasing: Plus for $12/month"),
+		page.getByText("You are purchasing: Pro for $15/month"),
 	).toBeVisible();
 });
 
 test("an invalid card number can't be submitted", async ({ page }) => {
-	await page.goto("/pricing/checkout?plan=Plus&amount=1200");
+	await page.goto("/pricing/checkout?plan=Pro&amount=1500");
 	await fillCheckout(page, "1234");
 
 	await page.getByRole("button", { name: /Complete Purchase/ }).click();
