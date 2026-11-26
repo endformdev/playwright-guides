@@ -10,8 +10,8 @@ export const ACCOUNT_FILE = path.join(AUTH_DIR, "user-account.json");
 
 /**
  * Creates one shared user, with the office's bikes, for the tests in the
- * `signed-in` project that only read data. Tests that change the account get their own user instead, see
- * the `account` option in `fixtures.ts`.
+ * `signed-in` project that only read data. Tests that change data use
+ * `testWithNewUser` from `fixtures.ts` to get their own isolated user instead.
  */
 export default async function globalSetup(config: FullConfig) {
 	const { baseURL, extraHTTPHeaders } = config.projects[0].use;

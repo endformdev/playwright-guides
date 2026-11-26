@@ -1,4 +1,9 @@
-import { expect, type Page, test } from "../../support/fixtures";
+import {
+	expect,
+	type Page,
+	test,
+	testWithNewUser,
+} from "../../support/fixtures";
 
 const VALID_PAYMENT = {
 	cardHolderName: "Ada Lovelace",
@@ -62,36 +67,38 @@ for (const { plan, price } of [
 }
 
 test.describe("upgrading", () => {
-	test.use({ account: "new" });
+	testWithNewUser(
+		"upgrading to Base starts a monthly subscription",
+		async ({ page, ai }) => {
+			await page.goto("/pricing");
+			await ai.do(
+				"choose the Base plan and complete checkout with a valid card",
+			);
 
-	test("upgrading to Base starts a monthly subscription", async ({
-		page,
-		ai,
-	}) => {
-		await page.goto("/pricing");
-		await ai.do("choose the Base plan and complete checkout with a valid card");
+			await expect(page).toHaveURL("/dashboard/team?payment=success");
+			await expect(page.getByText("Current Plan: Base")).toBeVisible();
+			await expect(page.getByText("Billed monthly")).toBeVisible();
+		},
+	);
 
-		await expect(page).toHaveURL("/dashboard/team?payment=success");
-		await expect(page.getByText("Current Plan: Base")).toBeVisible();
-		await expect(page.getByText("Billed monthly")).toBeVisible();
-	});
+	testWithNewUser(
+		"upgrading to Plus records exactly one payment",
+		async ({ page, ai }) => {
+			await page.goto("/pricing");
+			await ai.do(
+				"choose the Plus plan and complete checkout with a valid card",
+			);
 
-	test("upgrading to Plus records exactly one payment", async ({
-		page,
-		ai,
-	}) => {
-		await page.goto("/pricing");
-		await ai.do("choose the Plus plan and complete checkout with a valid card");
-
-		await expect(page).toHaveURL("/dashboard/team?payment=success");
-		const payments = await (await page.request.get("/api/payment")).json();
-		expect(payments).toHaveLength(1);
-		expect(payments[0]).toMatchObject({
-			planName: "Plus",
-			amount: 1200,
-			currency: "USD",
-		});
-	});
+			await expect(page).toHaveURL("/dashboard/team?payment=success");
+			const payments = await (await page.request.get("/api/payment")).json();
+			expect(payments).toHaveLength(1);
+			expect(payments[0]).toMatchObject({
+				planName: "Plus",
+				amount: 1200,
+				currency: "USD",
+			});
+		},
+	);
 });
 
 const invalidFields = [

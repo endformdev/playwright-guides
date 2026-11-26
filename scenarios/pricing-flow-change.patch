@@ -91,31 +91,34 @@ index f6466b0..e07f679 100644
  ] as const) {
  	test(`checkout summarises the ${plan} plan`, async ({ page }) => {
  		await openCheckout(page, plan);
-@@ -76,19 +76,16 @@ test.describe("upgrading", () => {
- 		await expect(page.getByText("Billed monthly")).toBeVisible();
- 	});
+@@ -81,22 +81,22 @@ test.describe("upgrading", () => {
+ 		},
+ 	);
  
--	test("upgrading to Plus records exactly one payment", async ({
--		page,
--		ai,
--	}) => {
-+	test("upgrading to Pro records exactly one payment", async ({ page, ai }) => {
- 		await page.goto("/pricing");
--		await ai.do("choose the Plus plan and complete checkout with a valid card");
-+		await ai.do("choose the Pro plan and complete checkout with a valid card");
+ 	testWithNewUser(
+-		"upgrading to Plus records exactly one payment",
++		"upgrading to Pro records exactly one payment",
+ 		async ({ page, ai }) => {
+ 			await page.goto("/pricing");
+ 			await ai.do(
+-				"choose the Plus plan and complete checkout with a valid card",
++				"choose the Pro plan and complete checkout with a valid card",
+ 			);
  
- 		await expect(page).toHaveURL("/dashboard/team?payment=success");
- 		const payments = await (await page.request.get("/api/payment")).json();
- 		expect(payments).toHaveLength(1);
- 		expect(payments[0]).toMatchObject({
--			planName: "Plus",
--			amount: 1200,
-+			planName: "Pro",
-+			amount: 1500,
- 			currency: "USD",
- 		});
- 	});
-@@ -106,7 +103,7 @@ const invalidFields = [
+ 			await expect(page).toHaveURL("/dashboard/team?payment=success");
+ 			const payments = await (await page.request.get("/api/payment")).json();
+ 			expect(payments).toHaveLength(1);
+ 			expect(payments[0]).toMatchObject({
+-				planName: "Plus",
+-				amount: 1200,
++				planName: "Pro",
++				amount: 1500,
+ 				currency: "USD",
+ 			});
+ 		},
+ 	);
+ });
+@@ -113,7 +113,7 @@ const invalidFields = [
  
  for (const { field, value, reason } of invalidFields) {
  	test(`a ${field} that is ${reason} can't be submitted`, async ({ page }) => {

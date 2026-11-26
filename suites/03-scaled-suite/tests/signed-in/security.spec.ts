@@ -1,4 +1,9 @@
-import { expect, type Page, test } from "../../support/fixtures";
+import {
+	expect,
+	type Page,
+	test,
+	testWithNewUser,
+} from "../../support/fixtures";
 
 async function changePassword(
 	page: Page,
@@ -18,14 +23,9 @@ async function changePassword(
 }
 
 test.describe("changing password", () => {
-	test.describe(() => {
-		test.use({ account: "new" });
-
-		test("users can sign in with their new password", async ({
-			page,
-			user,
-			ai,
-		}) => {
+	testWithNewUser(
+		"users can sign in with their new password",
+		async ({ page, user, ai }) => {
 			await changePassword(page, user.password, "a-brand-new-password");
 			await expect(
 				page.getByText("Password updated successfully."),
@@ -39,8 +39,8 @@ test.describe("changing password", () => {
 			});
 
 			await expect(page).toHaveURL("/dashboard");
-		});
-	});
+		},
+	);
 
 	test("the current password must be correct", async ({ page }) => {
 		await changePassword(page, "wrong-password", "a-brand-new-password");
@@ -88,25 +88,21 @@ test.describe("deleting the account", () => {
 		).toBeVisible();
 	});
 
-	test.describe(() => {
-		test.use({ account: "new" });
+	testWithNewUser("signs the user out for good", async ({ page, user, ai }) => {
+		await page.goto("/dashboard/security");
 
-		test("signs the user out for good", async ({ page, user, ai }) => {
-			await page.goto("/dashboard/security");
+		await page
+			.getByRole("textbox", { name: "Confirm Password" })
+			.fill(user.password);
+		await page.getByRole("button", { name: "Delete Account" }).click();
+		await expect(page).toHaveURL("/sign-in");
 
-			await page
-				.getByRole("textbox", { name: "Confirm Password" })
-				.fill(user.password);
-			await page.getByRole("button", { name: "Delete Account" }).click();
-			await expect(page).toHaveURL("/sign-in");
-
-			await ai.do("sign in with email {email} and password {password}", {
-				email: user.email,
-				password: user.password,
-			});
-			await expect(
-				page.getByText("Invalid email or password. Please try again."),
-			).toBeVisible();
+		await ai.do("sign in with email {email} and password {password}", {
+			email: user.email,
+			password: user.password,
 		});
+		await expect(
+			page.getByText("Invalid email or password. Please try again."),
+		).toBeVisible();
 	});
 });
