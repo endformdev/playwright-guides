@@ -49,7 +49,7 @@ export async function invite(page: Page, email: string) {
 	return (await link.getAttribute("href")) as string;
 }
 
-export async function purchase(page: Page, plan: "Base" | "Plus") {
+export async function purchase(page: Page, plan: "Base" | "Pro") {
 	await page.goto("/pricing");
 	await page
 		.getByRole("button", { name: "Get Started" })

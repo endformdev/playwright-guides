@@ -1,5 +1,5 @@
-// intent: "choose the Plus plan and complete checkout with a valid card"
-// test: "upgrading > upgrading to Plus records exactly one payment"
+// intent: "choose the Pro plan and complete checkout with a valid card"
+// test: "upgrading > upgrading to Pro records exactly one payment"
 import type { StepContext } from "playwright-intent";
 
 export default async function ({
@@ -26,6 +26,8 @@ export default async function ({
 	await page.getByRole("textbox", { name: "State" }).fill("Greater London");
 	await page.getByRole("textbox", { name: "ZIP Code" }).fill("N1 9GU");
 	await page.getByRole("textbox", { name: "Country" }).fill("United Kingdom");
-	await page.getByRole("button", { name: /Complete Purchase/ }).click();
+	await page
+		.getByRole("button", { name: "Complete Purchase - $15/month" })
+		.click();
 	await expect(page).toHaveURL("/dashboard/team?payment=success");
 }

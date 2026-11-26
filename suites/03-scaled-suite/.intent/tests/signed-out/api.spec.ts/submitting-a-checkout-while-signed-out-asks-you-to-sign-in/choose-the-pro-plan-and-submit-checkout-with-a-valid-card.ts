@@ -1,4 +1,4 @@
-// intent: "choose the Plus plan and submit checkout with a valid card"
+// intent: "choose the Pro plan and submit checkout with a valid card"
 // test: "submitting a checkout while signed out asks you to sign in"
 import type { StepContext } from "playwright-intent";
 
@@ -10,6 +10,7 @@ export default async function ({
 	vars,
 }: StepContext): Promise<void> {
 	await page.getByRole("button", { name: "Get Started" }).nth(1).click();
+	await expect(page).toHaveURL(/\/pricing\/checkout/);
 	await expect(
 		page.getByRole("heading", { name: "Complete Your Purchase" }),
 	).toBeVisible();
@@ -28,6 +29,8 @@ export default async function ({
 	await page.getByRole("textbox", { name: "State" }).fill("NY");
 	await page.getByRole("textbox", { name: "ZIP Code" }).fill("10001");
 	await page.getByRole("textbox", { name: "Country" }).fill("United States");
-	await page.getByRole("button", { name: /Complete Purchase/ }).click();
+	await page
+		.getByRole("button", { name: "Complete Purchase - $15/month" })
+		.click();
 	await expect(page).toHaveURL(/\/sign-in/);
 }

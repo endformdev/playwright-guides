@@ -16,14 +16,14 @@ async function fillCheckout(page: import("@playwright/test").Page) {
 }
 
 test("checkout explains which plan is being bought", async ({ page }) => {
-	await test.step("Choose the Plus plan", async () => {
+	await test.step("Choose the Pro plan", async () => {
 		await page.goto("/pricing");
 		await page.getByRole("button", { name: "Get Started" }).nth(1).click();
 	});
 
 	await test.step("See the plan and its price on the checkout", async () => {
 		await expect(
-			page.getByText("You are purchasing: Plus for $12/month"),
+			page.getByText("You are purchasing: Pro for $15/month"),
 		).toBeVisible();
 	});
 });

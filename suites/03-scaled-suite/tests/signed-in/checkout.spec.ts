@@ -24,7 +24,7 @@ const PAYMENT_LABELS: Record<keyof typeof VALID_PAYMENT, string> = {
 	country: "Country",
 };
 
-async function openCheckout(page: Page, plan: "Base" | "Plus") {
+async function openCheckout(page: Page, plan: "Base" | "Pro") {
 	await page.goto("/pricing");
 	await page
 		.getByRole("button", { name: "Get Started" })
@@ -47,7 +47,7 @@ async function fillCheckout(
 
 for (const { plan, price } of [
 	{ plan: "Base", price: "$8/month" },
-	{ plan: "Plus", price: "$12/month" },
+	{ plan: "Pro", price: "$15/month" },
 ] as const) {
 	test(`checkout summarises the ${plan} plan`, async ({ page }) => {
 		await openCheckout(page, plan);
@@ -76,19 +76,16 @@ test.describe("upgrading", () => {
 		await expect(page.getByText("Billed monthly")).toBeVisible();
 	});
 
-	test("upgrading to Plus records exactly one payment", async ({
-		page,
-		ai,
-	}) => {
+	test("upgrading to Pro records exactly one payment", async ({ page, ai }) => {
 		await page.goto("/pricing");
-		await ai.do("choose the Plus plan and complete checkout with a valid card");
+		await ai.do("choose the Pro plan and complete checkout with a valid card");
 
 		await expect(page).toHaveURL("/dashboard/team?payment=success");
 		const payments = await (await page.request.get("/api/payment")).json();
 		expect(payments).toHaveLength(1);
 		expect(payments[0]).toMatchObject({
-			planName: "Plus",
-			amount: 1200,
+			planName: "Pro",
+			amount: 1500,
 			currency: "USD",
 		});
 	});
@@ -106,7 +103,7 @@ const invalidFields = [
 
 for (const { field, value, reason } of invalidFields) {
 	test(`a ${field} that is ${reason} can't be submitted`, async ({ page }) => {
-		await openCheckout(page, "Plus");
+		await openCheckout(page, "Pro");
 		await fillCheckout(page, { [field]: value });
 
 		await page.getByRole("button", { name: /Complete Purchase/ }).click();
