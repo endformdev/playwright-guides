@@ -1,5 +1,11 @@
-import { expect, PASSWORD, test, uniqueEmail } from "./fixtures";
-import { addBike, nextWeek } from "./helpers";
+import { test } from "playwright-intent";
+import { addBike, nextWeek } from "./bikebook";
+import {
+	expect,
+	PASSWORD,
+	testWithNewUser,
+	uniqueEmail,
+} from "./test-with-new-user";
 
 test("new visitors can sign up and land on their office's bikes", async ({
 	page,
@@ -16,28 +22,43 @@ test("new visitors can sign up and land on their office's bikes", async ({
 	await expect(page.getByText("Your office has no bikes yet.")).toBeVisible();
 });
 
-test("users can sign in and sign out", async ({ page, existingUser, ai }) => {
+test("users can sign in and sign out", async ({ page, ai }) => {
+	const email = uniqueEmail();
+
+	await page.goto("/sign-up");
+	await ai.do("sign up with email {email} and password {password}", {
+		email,
+		password: PASSWORD,
+	});
+	await ai.do("sign out from the user menu");
+	await expect(page.getByRole("link", { name: "Sign Up" })).toBeVisible();
+
 	await page.goto("/sign-in");
 	await ai.do("sign in with email {email} and password {password}", {
-		email: existingUser.email,
-		password: existingUser.password,
+		email,
+		password: PASSWORD,
 	});
 
 	await expect(page).toHaveURL("/dashboard");
 	await expect(page.getByRole("heading", { name: "Bikes" })).toBeVisible();
-
-	await ai.do("sign out from the user menu");
-	await expect(page.getByRole("link", { name: "Sign Up" })).toBeVisible();
 });
 
 test("signing in with the wrong password shows an error", async ({
 	page,
-	existingUser,
 	ai,
 }) => {
+	const email = uniqueEmail();
+
+	await page.goto("/sign-up");
+	await ai.do("sign up with email {email} and password {password}", {
+		email,
+		password: PASSWORD,
+	});
+	await ai.do("sign out from the user menu");
+
 	await page.goto("/sign-in");
 	await ai.do("sign in with email {email} and password {password}", {
-		email: existingUser.email,
+		email,
 		password: "not-the-password",
 	});
 
@@ -47,13 +68,9 @@ test("signing in with the wrong password shows an error", async ({
 	await expect(page).toHaveURL("/sign-in");
 });
 
-test.describe("team invites", () => {
-	test.use({ signedIn: true });
-
-	test("an invited teammate can join the team and book a bike", async ({
-		page,
-		ai,
-	}) => {
+testWithNewUser(
+	"an invited teammate can join the team and book a bike",
+	async ({ page, ai }) => {
 		const teammateEmail = uniqueEmail("teammate");
 
 		await page.goto("/dashboard");
@@ -78,5 +95,5 @@ test.describe("team invites", () => {
 		await page.goto(`/dashboard?date=${nextWeek()}`);
 		await page.getByRole("button", { name: "Book City 1 morning" }).click();
 		await expect(page.getByRole("status")).toContainText("Booked City 1");
-	});
-});
+	},
+);

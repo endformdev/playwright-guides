@@ -6,42 +6,21 @@ export const PASSWORD = "testpassword123";
 // Internal test endpoint disabled in production and gated behind a shared token.
 const INTERNAL_API_HEADERS = { authorization: "Bearer VerySecretDummyToken" };
 
-export type Account = { email: string; password: string };
+export type User = { email: string; password: string; session: string };
 
-type Options = {
-	/**
-	 * When true, each test starts with a fresh isolated user already signed in
-	 * via a session cookie, and deletes the user after the test finishes.
-	 */
-	signedIn: boolean;
-};
-
-type Fixtures = {
-	/** A fresh user created via the API, without signing the browser in. */
-	existingUser: Account;
-};
-
-export const test = base.extend<Options & Fixtures & { signedInSession: void }>(
-	{
-		signedIn: [false, { option: true }],
-		signedInSession: [
-			async ({ signedIn, request, context, baseURL }, use) => {
-				if (!signedIn) return use();
-
-				const { email, session } = await createUser(request);
-				await context.addCookies([sessionCookie(session, baseURL as string)]);
-				await use();
-				await deleteUser(request, email);
-			},
-			{ auto: true },
-		],
-		existingUser: async ({ request }, use) => {
+export const testWithNewUser = base.extend<{ newUser: User }>({
+	newUser: [
+		async ({ request, context, baseURL }, use) => {
 			const user = await createUser(request);
-			await use({ email: user.email, password: user.password });
+			await context.addCookies([
+				sessionCookie(user.session, baseURL as string),
+			]);
+			await use(user);
 			await deleteUser(request, user.email);
 		},
-	},
-);
+		{ auto: true },
+	],
+});
 
 export { expect } from "@playwright/test";
 
@@ -52,7 +31,7 @@ export function uniqueEmail(prefix = "user") {
 async function createUser(
 	request: APIRequestContext,
 	email = uniqueEmail(),
-): Promise<Account & { session: string }> {
+): Promise<User> {
 	const response = await request.post("/api/internal/user", {
 		headers: INTERNAL_API_HEADERS,
 		data: { email, password: PASSWORD },

@@ -1,5 +1,5 @@
 // intent: "sign out from the user menu"
-// test: "team invites > an invited teammate can join the team and book a bike"
+// test: "an invited teammate can join the team and book a bike"
 import type { StepContext } from "playwright-intent";
 
 export default async function ({ page, expect }: StepContext): Promise<void> {

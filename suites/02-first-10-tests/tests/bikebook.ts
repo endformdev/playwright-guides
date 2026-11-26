@@ -13,7 +13,6 @@ export async function addBike(
 	).toBeVisible();
 }
 
-/** A day a week from now, as YYYY-MM-DD, so it is always bookable. */
 export function nextWeek() {
 	const day = new Date();
 	day.setUTCDate(day.getUTCDate() + 7);
