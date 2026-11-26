@@ -1,9 +1,4 @@
-import {
-	expect,
-	type Page,
-	test,
-	testWithNewUser,
-} from "../../support/fixtures";
+import { expect, type Page, testWithNewUser } from "../../support/fixtures";
 
 async function changePassword(
 	page: Page,
@@ -22,11 +17,11 @@ async function changePassword(
 	await page.getByRole("button", { name: "Update Password" }).click();
 }
 
-test.describe("changing password", () => {
+testWithNewUser.describe("changing password", () => {
 	testWithNewUser(
 		"users can sign in with their new password",
-		async ({ page, user, ai }) => {
-			await changePassword(page, user.password, "a-brand-new-password");
+		async ({ page, newUser, ai }) => {
+			await changePassword(page, newUser.password, "a-brand-new-password");
 			await expect(
 				page.getByText("Password updated successfully."),
 			).toBeVisible();
@@ -34,7 +29,7 @@ test.describe("changing password", () => {
 			await ai.do("sign out from the user menu");
 			await page.goto("/sign-in");
 			await ai.do("sign in with email {email} and password {password}", {
-				email: user.email,
+				email: newUser.email,
 				password: "a-brand-new-password",
 			});
 
@@ -42,7 +37,7 @@ test.describe("changing password", () => {
 		},
 	);
 
-	test("the current password must be correct", async ({ page }) => {
+	testWithNewUser("the current password must be correct", async ({ page }) => {
 		await changePassword(page, "wrong-password", "a-brand-new-password");
 
 		await expect(
@@ -50,10 +45,10 @@ test.describe("changing password", () => {
 		).toBeVisible();
 	});
 
-	test("the confirmation must match", async ({ page, user }) => {
+	testWithNewUser("the confirmation must match", async ({ page, newUser }) => {
 		await changePassword(
 			page,
-			user.password,
+			newUser.password,
 			"a-brand-new-password",
 			"a-different-password",
 		);
@@ -63,19 +58,22 @@ test.describe("changing password", () => {
 		).toBeVisible();
 	});
 
-	test("the new password must be different", async ({ page, user }) => {
-		await changePassword(page, user.password, user.password);
+	testWithNewUser(
+		"the new password must be different",
+		async ({ page, newUser }) => {
+			await changePassword(page, newUser.password, newUser.password);
 
-		await expect(
-			page.getByText(
-				"New password must be different from the current password.",
-			),
-		).toBeVisible();
-	});
+			await expect(
+				page.getByText(
+					"New password must be different from the current password.",
+				),
+			).toBeVisible();
+		},
+	);
 });
 
-test.describe("deleting the account", () => {
-	test("requires the correct password", async ({ page }) => {
+testWithNewUser.describe("deleting the account", () => {
+	testWithNewUser("requires the correct password", async ({ page }) => {
 		await page.goto("/dashboard/security");
 
 		await page
@@ -88,21 +86,24 @@ test.describe("deleting the account", () => {
 		).toBeVisible();
 	});
 
-	testWithNewUser("signs the user out for good", async ({ page, user, ai }) => {
-		await page.goto("/dashboard/security");
+	testWithNewUser(
+		"signs the user out for good",
+		async ({ page, newUser, ai }) => {
+			await page.goto("/dashboard/security");
 
-		await page
-			.getByRole("textbox", { name: "Confirm Password" })
-			.fill(user.password);
-		await page.getByRole("button", { name: "Delete Account" }).click();
-		await expect(page).toHaveURL("/sign-in");
+			await page
+				.getByRole("textbox", { name: "Confirm Password" })
+				.fill(newUser.password);
+			await page.getByRole("button", { name: "Delete Account" }).click();
+			await expect(page).toHaveURL("/sign-in");
 
-		await ai.do("sign in with email {email} and password {password}", {
-			email: user.email,
-			password: user.password,
-		});
-		await expect(
-			page.getByText("Invalid email or password. Please try again."),
-		).toBeVisible();
-	});
+			await ai.do("sign in with email {email} and password {password}", {
+				email: newUser.email,
+				password: newUser.password,
+			});
+			await expect(
+				page.getByText("Invalid email or password. Please try again."),
+			).toBeVisible();
+		},
+	);
 });

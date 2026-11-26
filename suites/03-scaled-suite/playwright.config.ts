@@ -5,7 +5,6 @@ import {
 	type IntentUseOptions,
 } from "playwright-intent";
 import { allow, fileStore, refuse } from "playwright-intent/file-store";
-import { STORAGE_STATE } from "./support/global-setup";
 
 export const baseURL =
 	process.env.BASE_URL || "https://endform-playwright-guides.vercel.app";
@@ -23,8 +22,6 @@ const intent = {
 
 export default defineConfig<IntentUseOptions>({
 	testDir: "./tests",
-	globalSetup: "./support/global-setup.ts",
-	globalTeardown: "./support/global-teardown.ts",
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
@@ -36,15 +33,4 @@ export default defineConfig<IntentUseOptions>({
 		intent,
 		...devices["Desktop Chrome"],
 	},
-	projects: [
-		{
-			name: "signed-out",
-			testDir: "./tests/signed-out",
-		},
-		{
-			name: "signed-in",
-			testDir: "./tests/signed-in",
-			use: { storageState: STORAGE_STATE },
-		},
-	],
 });

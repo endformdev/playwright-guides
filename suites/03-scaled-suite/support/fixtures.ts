@@ -29,15 +29,9 @@ type TeamFixture = {
 };
 
 export const test = base.extend<{
-	/** The user the page is signed in as (from shared storageState). */
-	user: Account;
 	/** A user that exists but isn't signed in to the page. */
 	existingUser: Account;
 }>({
-	user: async ({ request }, use) => {
-		const user = await (await request.get("/api/user")).json();
-		await use({ email: user.email, password: PASSWORD });
-	},
 	existingUser: async ({ request }, use) => {
 		const user = await createUser(request);
 		await use(user);
@@ -45,7 +39,7 @@ export const test = base.extend<{
 	},
 });
 
-export const testWithNewUser = test.extend<{
+export const testWithNewUser = base.extend<{
 	newUser: NewUser;
 	fleet: FleetFixture;
 	team: TeamFixture;
@@ -53,7 +47,6 @@ export const testWithNewUser = test.extend<{
 	newUser: [
 		async ({ request, context, baseURL }, use) => {
 			const user = await createUser(request);
-			await context.clearCookies();
 			await context.addCookies([
 				sessionCookie(user.session, baseURL as string),
 			]);
@@ -62,9 +55,6 @@ export const testWithNewUser = test.extend<{
 		},
 		{ auto: true },
 	],
-	user: async ({ newUser }, use) => {
-		await use(newUser);
-	},
 	fleet: async ({ newUser, request }, use) => {
 		let current: Bike[] = [];
 		const set = async (bikes: Bike[]) => {

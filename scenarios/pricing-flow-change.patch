@@ -1,8 +1,8 @@
 diff --git a/app/(dashboard)/pricing/page.tsx b/app/(dashboard)/pricing/page.tsx
-index 9cd8c1d..d96f166 100644
+index 0d55912..bed35f4 100644
 --- a/app/(dashboard)/pricing/page.tsx
 +++ b/app/(dashboard)/pricing/page.tsx
-@@ -11,8 +11,8 @@ const PLANS = [
+@@ -12,8 +12,8 @@ const PLANS = [
  		features: ["Unlimited bookings", "Unlimited team members", "Email support"],
  	},
  	{
@@ -70,7 +70,7 @@ index 15ef484..34fc1fd 100644
  	await expect(page).toHaveURL(/\/sign-in/);
  }
 diff --git a/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts b/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts
-index f6466b0..e07f679 100644
+index 484f363..7d9ac45 100644
 --- a/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts
 +++ b/suites/03-scaled-suite/tests/signed-in/checkout.spec.ts
 @@ -24,7 +24,7 @@ const PAYMENT_LABELS: Record<keyof typeof VALID_PAYMENT, string> = {
@@ -89,10 +89,9 @@ index f6466b0..e07f679 100644
 -	{ plan: "Plus", price: "$12/month" },
 +	{ plan: "Pro", price: "$15/month" },
  ] as const) {
- 	test(`checkout summarises the ${plan} plan`, async ({ page }) => {
+ 	testWithNewUser(`checkout summarises the ${plan} plan`, async ({ page }) => {
  		await openCheckout(page, plan);
-@@ -81,22 +81,22 @@ test.describe("upgrading", () => {
- 		},
+@@ -77,19 +77,19 @@ testWithNewUser.describe("upgrading", () => {
  	);
  
  	testWithNewUser(
@@ -116,17 +115,15 @@ index f6466b0..e07f679 100644
  				currency: "USD",
  			});
  		},
- 	);
- });
-@@ -113,7 +113,7 @@ const invalidFields = [
+@@ -110,7 +110,7 @@ for (const { field, value, reason } of invalidFields) {
+ 	testWithNewUser(
+ 		`a ${field} that is ${reason} can't be submitted`,
+ 		async ({ page }) => {
+-			await openCheckout(page, "Plus");
++			await openCheckout(page, "Pro");
+ 			await fillCheckout(page, { [field]: value });
  
- for (const { field, value, reason } of invalidFields) {
- 	test(`a ${field} that is ${reason} can't be submitted`, async ({ page }) => {
--		await openCheckout(page, "Plus");
-+		await openCheckout(page, "Pro");
- 		await fillCheckout(page, { [field]: value });
- 
- 		await page.getByRole("button", { name: /Complete Purchase/ }).click();
+ 			await page.getByRole("button", { name: /Complete Purchase/ }).click();
 diff --git a/suites/03-scaled-suite/tests/signed-out/api.spec.ts b/suites/03-scaled-suite/tests/signed-out/api.spec.ts
 index cc3a049..93a4891 100644
 --- a/suites/03-scaled-suite/tests/signed-out/api.spec.ts
@@ -235,7 +232,7 @@ index fad2e34..ed92543 100644
  
  	await page.getByRole("button", { name: /Complete Purchase/ }).click();
 diff --git a/suites/04a-speed-unoptimized/tests/helpers.ts b/suites/04a-speed-unoptimized/tests/helpers.ts
-index e0125ef..5ef71b0 100644
+index b4122bf..b77b4ee 100644
 --- a/suites/04a-speed-unoptimized/tests/helpers.ts
 +++ b/suites/04a-speed-unoptimized/tests/helpers.ts
 @@ -70,7 +70,7 @@ export async function invite(page: Page, email: string) {
@@ -248,7 +245,7 @@ index e0125ef..5ef71b0 100644
  	await page
  		.getByRole("button", { name: "Get Started" })
 diff --git a/suites/04b-speed-optimized/support/actions.ts b/suites/04b-speed-optimized/support/actions.ts
-index 1408f8e..792dab8 100644
+index 13c29a1..0822b64 100644
 --- a/suites/04b-speed-optimized/support/actions.ts
 +++ b/suites/04b-speed-optimized/support/actions.ts
 @@ -49,7 +49,7 @@ export async function invite(page: Page, email: string) {

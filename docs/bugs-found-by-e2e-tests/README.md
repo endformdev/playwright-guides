@@ -279,13 +279,13 @@ The `flaky` demo profile deliberately brings back a version of this race (the fo
 
 **Cause.** The route returned the database row as is. The page only shows the name and email, so nothing on screen hinted at it.
 
-**Caught by** [`signed-in/api.spec.ts`](../../suites/03-scaled-suite/tests/signed-in/api.spec.ts), which calls the API with the signed-in user's cookies through Playwright's `request` fixture:
+**Caught by** [`signed-in/api.spec.ts`](../../suites/03-scaled-suite/tests/signed-in/api.spec.ts), which calls the API with the signed-in user's cookies through `page.request`:
 
 ```ts
-test("returns the signed-in user", async ({ request, user }) => {
-	const body = await (await request.get("/api/user")).json();
+testWithNewUser("returns the signed-in user", async ({ page, newUser }) => {
+	const body = await (await page.request.get("/api/user")).json();
 
-	expect(body).toMatchObject({ email: user.email, role: "owner" });
+	expect(body).toMatchObject({ email: newUser.email, role: "owner" });
 	expect(body).not.toHaveProperty("passwordHash");
 });
 ```

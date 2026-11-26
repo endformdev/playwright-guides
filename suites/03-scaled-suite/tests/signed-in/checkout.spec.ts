@@ -1,9 +1,4 @@
-import {
-	expect,
-	type Page,
-	test,
-	testWithNewUser,
-} from "../../support/fixtures";
+import { expect, type Page, testWithNewUser } from "../../support/fixtures";
 
 const VALID_PAYMENT = {
 	cardHolderName: "Ada Lovelace",
@@ -54,7 +49,7 @@ for (const { plan, price } of [
 	{ plan: "Base", price: "$8/month" },
 	{ plan: "Plus", price: "$12/month" },
 ] as const) {
-	test(`checkout summarises the ${plan} plan`, async ({ page }) => {
+	testWithNewUser(`checkout summarises the ${plan} plan`, async ({ page }) => {
 		await openCheckout(page, plan);
 
 		await expect(
@@ -66,7 +61,7 @@ for (const { plan, price } of [
 	});
 }
 
-test.describe("upgrading", () => {
+testWithNewUser.describe("upgrading", () => {
 	testWithNewUser(
 		"upgrading to Base starts a monthly subscription",
 		async ({ page, ai }) => {
@@ -112,15 +107,18 @@ const invalidFields = [
 ] as const;
 
 for (const { field, value, reason } of invalidFields) {
-	test(`a ${field} that is ${reason} can't be submitted`, async ({ page }) => {
-		await openCheckout(page, "Plus");
-		await fillCheckout(page, { [field]: value });
+	testWithNewUser(
+		`a ${field} that is ${reason} can't be submitted`,
+		async ({ page }) => {
+			await openCheckout(page, "Plus");
+			await fillCheckout(page, { [field]: value });
 
-		await page.getByRole("button", { name: /Complete Purchase/ }).click();
+			await page.getByRole("button", { name: /Complete Purchase/ }).click();
 
-		await expect(
-			page.getByRole("textbox", { name: PAYMENT_LABELS[field] }),
-		).toHaveJSProperty("validity.valid", false);
-		await expect(page).toHaveURL(/\/pricing\/checkout/);
-	});
+			await expect(
+				page.getByRole("textbox", { name: PAYMENT_LABELS[field] }),
+			).toHaveJSProperty("validity.valid", false);
+			await expect(page).toHaveURL(/\/pricing\/checkout/);
+		},
+	);
 }

@@ -1,15 +1,18 @@
 import { uniqueEmail } from "../../support/api";
-import { expect, test, testWithNewUser } from "../../support/fixtures";
+import { expect, testWithNewUser } from "../../support/fixtures";
 
-test("shows the signed-in user's email", async ({ page, user }) => {
-	await page.goto("/dashboard/general");
+testWithNewUser(
+	"shows the signed-in user's email",
+	async ({ page, newUser }) => {
+		await page.goto("/dashboard/general");
 
-	await expect(page.getByRole("textbox", { name: "Email" })).toHaveValue(
-		user.email,
-	);
-});
+		await expect(page.getByRole("textbox", { name: "Email" })).toHaveValue(
+			newUser.email,
+		);
+	},
+);
 
-test.describe("updating the account", () => {
+testWithNewUser.describe("updating the account", () => {
 	testWithNewUser("a new name is shown in the team list", async ({ page }) => {
 		await page.goto("/dashboard/general");
 
@@ -37,7 +40,7 @@ test.describe("updating the account", () => {
 
 	testWithNewUser(
 		"users can sign in with a changed email",
-		async ({ page, user, ai }) => {
+		async ({ page, newUser, ai }) => {
 			const newEmail = uniqueEmail("changed");
 			await page.goto("/dashboard/general");
 
@@ -54,7 +57,7 @@ test.describe("updating the account", () => {
 			await page.goto("/sign-in");
 			await ai.do("sign in with email {email} and password {password}", {
 				email: newEmail,
-				password: user.password,
+				password: newUser.password,
 			});
 
 			await expect(page).toHaveURL("/dashboard");
