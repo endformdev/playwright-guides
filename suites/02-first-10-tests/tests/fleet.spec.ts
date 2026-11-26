@@ -1,4 +1,3 @@
-import { addBike, nextWeek } from "./bikebook";
 import { expect, testWithNewUser } from "./test-with-new-user";
 
 testWithNewUser(
@@ -6,7 +5,7 @@ testWithNewUser(
 	async ({ page, ai }) => {
 		await page.goto("/dashboard");
 		await ai.do("add a road bike named Road 1 to the fleet");
-		await addBike(page, "Cargo", "cargo");
+		await ai.do("add a cargo bike named Cargo to the fleet");
 
 		const rows = page.getByRole("row");
 		await expect(rows).toHaveCount(3);
@@ -19,9 +18,9 @@ testWithNewUser(
 
 testWithNewUser(
 	"removing a bike removes it and its bookings",
-	async ({ page }) => {
+	async ({ page, ai }) => {
 		await page.goto(`/dashboard?date=${nextWeek()}`);
-		await addBike(page, "Cargo", "cargo");
+		await ai.do("add a cargo bike named Cargo to the fleet");
 
 		await page.getByRole("button", { name: "Book Cargo morning" }).click();
 		await expect(page.getByRole("status")).toContainText("Booked Cargo");
@@ -34,9 +33,9 @@ testWithNewUser(
 	},
 );
 
-testWithNewUser("duplicate bike names are rejected", async ({ page }) => {
+testWithNewUser("duplicate bike names are rejected", async ({ page, ai }) => {
 	await page.goto("/dashboard");
-	await addBike(page, "Road 1", "road");
+	await ai.do("add a road bike named Road 1 to the fleet");
 
 	await page.getByRole("textbox", { name: "Bike name" }).fill("Road 1");
 	await page.getByRole("button", { name: "Add bike" }).click();
@@ -45,3 +44,9 @@ testWithNewUser("duplicate bike names are rejected", async ({ page }) => {
 		page.getByText("A bike named Road 1 is already in your fleet"),
 	).toBeVisible();
 });
+
+function nextWeek() {
+	const day = new Date();
+	day.setUTCDate(day.getUTCDate() + 7);
+	return day.toISOString().slice(0, 10);
+}

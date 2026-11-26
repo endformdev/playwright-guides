@@ -1,11 +1,10 @@
-import { addBike, nextWeek } from "./bikebook";
 import { expect, testWithNewUser } from "./test-with-new-user";
 
 testWithNewUser(
 	"users can book a bike and see it in their upcoming bookings",
 	async ({ page, ai }) => {
 		await page.goto(`/dashboard?date=${nextWeek()}`);
-		await addBike(page, "Road 1", "road");
+		await ai.do("add a road bike named Road 1 to the fleet");
 		await ai.do("book Road 1 for the morning");
 
 		await expect(page.getByRole("status")).toContainText("Booked Road 1");
@@ -23,9 +22,9 @@ testWithNewUser(
 
 testWithNewUser(
 	"cancelling a booking frees the slot again",
-	async ({ page }) => {
+	async ({ page, ai }) => {
 		await page.goto(`/dashboard?date=${nextWeek()}`);
-		await addBike(page, "Cargo", "cargo");
+		await ai.do("add a cargo bike named Cargo to the fleet");
 
 		await page.getByRole("button", { name: "Book Cargo afternoon" }).click();
 		await expect(page.getByRole("status")).toContainText("Booked Cargo");
@@ -41,10 +40,10 @@ testWithNewUser(
 
 testWithNewUser(
 	"a bike can't be booked twice for the same slot",
-	async ({ page, browser }) => {
+	async ({ page, ai, browser }) => {
 		const day = `/dashboard?date=${nextWeek()}`;
 		await page.goto(day);
-		await addBike(page, "Road 1", "road");
+		await ai.do("add a road bike named Road 1 to the fleet");
 
 		const otherContext = await browser.newContext({
 			storageState: await page.context().storageState(),
@@ -65,3 +64,9 @@ testWithNewUser(
 		await otherContext.close();
 	},
 );
+
+function nextWeek() {
+	const day = new Date();
+	day.setUTCDate(day.getUTCDate() + 7);
+	return day.toISOString().slice(0, 10);
+}

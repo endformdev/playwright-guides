@@ -1,5 +1,4 @@
 import { test } from "playwright-intent";
-import { addBike, nextWeek } from "./bikebook";
 import {
 	expect,
 	PASSWORD,
@@ -70,7 +69,7 @@ testWithNewUser(
 		const teammateEmail = uniqueEmail("teammate");
 
 		await page.goto("/dashboard");
-		await addBike(page, "City 1", "city");
+		await ai.do("add a city bike named City 1 to the fleet");
 
 		await page.getByRole("link", { name: "Team" }).click();
 		await ai.do("invite {email} to the team as a member", {
@@ -93,3 +92,9 @@ testWithNewUser(
 		await expect(page.getByRole("status")).toContainText("Booked City 1");
 	},
 );
+
+function nextWeek() {
+	const day = new Date();
+	day.setUTCDate(day.getUTCDate() + 7);
+	return day.toISOString().slice(0, 10);
+}
