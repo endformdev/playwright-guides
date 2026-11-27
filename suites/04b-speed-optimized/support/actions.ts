@@ -9,6 +9,12 @@ export async function signIn(page: Page, email: string, password = PASSWORD) {
 	await expect(page).toHaveURL("/dashboard");
 }
 
+export async function signOut(page: Page) {
+	await page.getByTestId("user-menu-trigger").click();
+	await page.getByRole("menuitem", { name: "Sign out" }).click();
+	await expect(page.getByRole("link", { name: "Sign Up" })).toBeVisible();
+}
+
 export async function updateAccount(
 	page: Page,
 	values: { name?: string; email?: string },

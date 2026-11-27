@@ -58,6 +58,7 @@ export async function setFleet(
 			`Setting the fleet failed (${response.status()}): ${await response.text()}`,
 		);
 	}
+	return (await response.json()).bikes as (Bike & { id: number })[];
 }
 
 export async function deleteUser(request: APIRequestContext, email: string) {

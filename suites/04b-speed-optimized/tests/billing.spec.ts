@@ -1,5 +1,5 @@
 import { fillCheckout, purchase } from "../support/actions";
-import { expect, test } from "../support/fixtures";
+import { expect, test, testWithNewUser } from "../support/fixtures";
 
 test("pricing lists both plans", async ({ page }) => {
 	await page.goto("/pricing");
@@ -33,33 +33,38 @@ test("an invalid card number can't be submitted", async ({ page }) => {
 
 // These tests charge the payment provider. `endform.config.ts` limits how many
 // of them run at the same time.
-test.describe("upgrading", { tag: "@payments" }, () => {
-	test.use({ account: "new" });
+testWithNewUser.describe("upgrading", { tag: "@payments" }, () => {
+	testWithNewUser(
+		"upgrading to Base starts a subscription",
+		async ({ page }) => {
+			await purchase(page, "Base");
 
-	test("upgrading to Base starts a subscription", async ({ page }) => {
-		await purchase(page, "Base");
+			await expect(page.getByText("Current Plan: Base")).toBeVisible();
+			await expect(page.getByText("Billed monthly")).toBeVisible();
+		},
+	);
 
-		await expect(page.getByText("Current Plan: Base")).toBeVisible();
-		await expect(page.getByText("Billed monthly")).toBeVisible();
-	});
+	testWithNewUser(
+		"upgrading to Plus records exactly one payment",
+		async ({ page }) => {
+			await purchase(page, "Plus");
 
-	test("upgrading to Plus records exactly one payment", async ({ page }) => {
-		await purchase(page, "Plus");
+			await expect(page.getByText("Current Plan: Plus")).toBeVisible();
+			const payments = await (await page.request.get("/api/payment")).json();
+			expect(payments).toHaveLength(1);
+			expect(payments[0]).toMatchObject({ planName: "Plus", amount: 1200 });
+		},
+	);
 
-		await expect(page.getByText("Current Plan: Plus")).toBeVisible();
-		const payments = await (await page.request.get("/api/payment")).json();
-		expect(payments).toHaveLength(1);
-		expect(payments[0]).toMatchObject({ planName: "Plus", amount: 1200 });
-	});
+	testWithNewUser(
+		"switching from Base to Plus records both payments",
+		async ({ page }) => {
+			await purchase(page, "Base");
+			await purchase(page, "Plus");
 
-	test("switching from Base to Plus records both payments", async ({
-		page,
-	}) => {
-		await purchase(page, "Base");
-		await purchase(page, "Plus");
-
-		await expect(page.getByText("Current Plan: Plus")).toBeVisible();
-		const payments = await (await page.request.get("/api/payment")).json();
-		expect(payments).toHaveLength(2);
-	});
+			await expect(page.getByText("Current Plan: Plus")).toBeVisible();
+			const payments = await (await page.request.get("/api/payment")).json();
+			expect(payments).toHaveLength(2);
+		},
+	);
 });
